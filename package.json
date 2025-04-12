@@ -1,6 +1,6 @@
 {
   "name": "@tanstack-dev/translate-docs",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Translate tanstack-dev documentation",
   "type": "module",
   "main": "dist/index.js",
