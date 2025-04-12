@@ -7,7 +7,7 @@
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "translate-docs": "./dist/index.js"
+    "translate-docs": "dist/index.js"
   },
   "files": [
     "dist"
@@ -39,5 +39,8 @@
     "cosmiconfig": "^9.0.0",
     "gray-matter": "^4.0.3",
     "openai": "^4.92.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
