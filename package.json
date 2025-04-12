@@ -1,0 +1,40 @@
+{
+  "name": "@tanstack-dev/translate-docs",
+  "version": "0.0.1",
+  "description": "Translate tanstack-dev documentation",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "translate-docs": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --apply ."
+  },
+  "keywords": [],
+  "license": "ISC",
+  "devDependencies": {
+    "@biomejs/biome": "1.5.3",
+    "@types/commander": "^2.12.5",
+    "@types/node": "^22.14.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "openai": "^4.92.1",
+    "cosmiconfig": "^9.0.0",
+    "gray-matter": "^4.0.3"
+  }
+}
