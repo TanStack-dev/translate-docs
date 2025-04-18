@@ -8,8 +8,8 @@ import type { MainConfig } from './types';
 
 export type Config = MainConfig | MainConfig[];
 
-// This string will be replaced during build
-const version = '__VERSION__';
+// Read version from environment variable set during build
+const version = process.env.PACKAGE_VERSION || '0.0.0';
 
 const program = new Command();
 
