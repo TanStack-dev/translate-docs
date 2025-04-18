@@ -1,6 +1,6 @@
-import matter from 'gray-matter';
 import * as fs$ from 'node:fs/promises';
 import * as path from 'node:path';
+import micromatch from 'micromatch';
 
 import { executeInBatches } from './batch';
 import { logger } from './logger';
@@ -11,17 +11,10 @@ import {
   extractPathToLabelMap,
   getTranslatedConfig,
   shouldTranslateConfig,
-  shouldTranslateDoc,
   getDocUpdateStatus,
   translateDoc,
 } from './utils';
 import { MainConfig } from './types';
-
-interface LangConfig {
-  name: string;
-  guide?: string;
-  terms?: Record<string, string>;
-}
 
 export async function main({
   langs,
@@ -83,8 +76,8 @@ export async function main({
     // Extract all document paths
     const docPaths = extractDocPaths(docsConfig);
 
-    // Filter paths based on pattern if provided
-    // The pattern supports glob-style matching:
+    // Filter paths based on pattern if provided using micromatch
+    // micromatch supports glob patterns like:
     // - * matches any characters (e.g., "docs/*" matches all files in docs directory)
     // - ? matches any single character (e.g., "docs/?.md" matches single-character filenames)
     // - [!...] matches any character not in the brackets (e.g., "docs/[!a]*" matches files not starting with 'a')
@@ -94,17 +87,15 @@ export async function main({
     // - "*tutorial" matches paths ending with "tutorial"
     // - "docs/*/tutorial" matches tutorial files in any subdirectory of docs
     const filteredDocPaths = pattern
-      ? docPaths.filter((path) => {
-          // Convert glob pattern to regex
-          const regexPattern = pattern
-            .replace(/\./g, '\\.') // Escape dots
-            .replace(/\*/g, '.*') // Convert * to .*
-            .replace(/\?/g, '.') // Convert ? to .
-            .replace(/\[!/g, '[^') // Convert [! to [^
-            .replace(/\[/g, '\\[') // Escape [
-            .replace(/\]/g, '\\]'); // Escape ]
-          return path.match(new RegExp(regexPattern));
-        })
+      ? (() => {
+          // Normalize the pattern by removing .md extension if present
+          // This handles cases where users specify patterns like "*.md" or "docs/**/*.md"
+          const normalizedPattern = pattern.endsWith('.md') 
+            ? pattern.slice(0, -3) 
+            : pattern;
+          
+          return micromatch(docPaths, normalizedPattern);
+        })()
       : docPaths;
 
     // Extract path to label mappings from translated config

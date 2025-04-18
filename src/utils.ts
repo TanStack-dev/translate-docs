@@ -128,6 +128,7 @@ export function getLastModifiedTimeFromGit(filePath: string): Date {
     encoding: 'utf8',
   }).trim();
 
+  // console.log('filePath',filePath, result, new Date(parseInt(result, 10) * 1000));
   if (result) {
     return new Date(parseInt(result, 10) * 1000);
   }
@@ -231,13 +232,14 @@ export async function getDocUpdateStatus({
   const targetParsed = matter(targetContent);
 
   // First, check for timestamp-based updates
-  if (targetParsed.data['source-updated-at']) {
-    const metadataSourceUpdatedAt = new Date(
-      targetParsed.data['source-updated-at'],
+  if (targetParsed.data['translation-updated-at']) {
+    const metadataTranslationUpdatedAt = new Date(
+      targetParsed.data['translation-updated-at'],
     );
 
+    // console.log('sourceLastModifiedDate', sourceLastModifiedDate, 'metadataTranslationUpdatedAt', metadataTranslationUpdatedAt);
     // If the source file has been updated since the last translation
-    if (sourceLastModifiedDate > metadataSourceUpdatedAt) {
+    if (sourceLastModifiedDate > metadataTranslationUpdatedAt) {
       logger.debug(
         `Source file ${sourcePath} has been updated since last translation, needs updating`,
       );
