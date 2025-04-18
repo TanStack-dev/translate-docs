@@ -40,7 +40,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Run semantic-release to update version in package.json
-          npx semantic-release --extends ./.releaserc.prepare.js
+          npx semantic-release --extends ./.releaserc.prepare.cjs
           
           # Extract version from package.json for later use
           VERSION=$(node -p "require('./package.json').version")
@@ -53,4 +53,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --extends ./.releaserc.publish.js
+        run: npx semantic-release --extends ./.releaserc.publish.cjs
