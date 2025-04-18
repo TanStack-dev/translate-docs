@@ -25,6 +25,7 @@ export default defineConfig({
     'node:path',
     'node:crypto',
     'node:child_process',
+    'node:url',
   ],
   platform: 'node',
   target: 'node20',
