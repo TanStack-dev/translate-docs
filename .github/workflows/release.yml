@@ -37,6 +37,7 @@ jobs:
         id: analyze
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # Create a temporary release config that only determines the version
           cat > .releaserc.prepare.json << EOF
