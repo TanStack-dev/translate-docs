@@ -2,11 +2,13 @@ import { defineConfig } from 'tsup';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
-// Read version from package.json
-const packageJson = JSON.parse(
-  readFileSync(resolve(__dirname, './package.json'), 'utf8')
-);
-const version = packageJson.version;
+// Use version from environment (set by semantic-release dry-run) or fallback to package.json
+const version = process.env.NEXT_VERSION || (() => {
+  const packageJson = JSON.parse(
+    readFileSync(resolve(__dirname, './package.json'), 'utf8')
+  );
+  return packageJson.version;
+})();
 
 export default defineConfig({
   entry: ['src/index.ts'],

@@ -33,7 +33,18 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verify the integrity of dependencies
         run: pnpm audit
+      - name: Get version from semantic-release
+        id: get-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION_INFO=$(npx semantic-release --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+')
+          echo "NEXT_VERSION=${VERSION_INFO}" >> $GITHUB_ENV
+          echo "Next version will be: ${VERSION_INFO}"
       - name: Build
+        env:
+          NEXT_VERSION: ${{ env.NEXT_VERSION }}
         run: pnpm build
       - name: Release
         env:
