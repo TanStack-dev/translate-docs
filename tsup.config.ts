@@ -1,12 +1,14 @@
 import { defineConfig } from 'tsup';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
-// Read version from package.json
-const packageJson = JSON.parse(
-  readFileSync(resolve(__dirname, './package.json'), 'utf8')
-);
-const version = packageJson.version;
+// Use version from environment (set by semantic-release dry-run) or fallback to package.json
+const version = process.env.NEXT_VERSION || (() => {
+  const packageJson = JSON.parse(
+    readFileSync(resolve(__dirname, './package.json'), 'utf8')
+  );
+  return packageJson.version;
+})();
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -25,15 +27,15 @@ export default defineConfig({
     'node:path',
     'node:crypto',
     'node:child_process',
-    'node:url',
   ],
   platform: 'node',
   target: 'node20',
-  // Use esbuild's define feature to replace the version at build time
-  esbuildOptions(options) {
-    options.define = {
-      ...options.define,
-      'process.env.PACKAGE_VERSION': JSON.stringify(version),
-    };
+  // Apply version replacement after build
+  async onSuccess() {
+    const distPath = resolve(__dirname, './dist/index.js');
+    const content = readFileSync(distPath, 'utf8');
+    const updated = content.replace(/'__VERSION__'/g, `'${version}'`);
+    writeFileSync(distPath, updated);
+    console.log(`Version in dist/index.js set to ${version}`);
   },
 });
