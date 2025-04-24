@@ -33,24 +33,21 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Verify the integrity of dependencies
         run: pnpm audit
-      - name: Analyze and prepare version
-        id: analyze
+      - name: Get version from semantic-release
+        id: get-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Run semantic-release to update version in package.json
-          npx semantic-release --extends ./.releaserc.prepare.cjs
-          
-          # Extract version from package.json for later use
-          VERSION=$(node -p "require('./package.json').version")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Package version updated to: $VERSION"
+          VERSION_INFO=$(npx semantic-release --dry-run | grep -oP 'The next release version is \K[0-9]+\.[0-9]+\.[0-9]+')
+          echo "NEXT_VERSION=${VERSION_INFO}" >> $GITHUB_ENV
+          echo "Next version will be: ${VERSION_INFO}"
       - name: Build
+        env:
+          NEXT_VERSION: ${{ env.NEXT_VERSION }}
         run: pnpm build
-      - name: Publish to npm
-        if: steps.analyze.outputs.VERSION != ''
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release --extends ./.releaserc.publish.cjs
+        run: npx semantic-release
