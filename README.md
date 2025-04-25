@@ -79,3 +79,10 @@ npx translate-docs --update-config-only
 # Enable verbose logging for troubleshooting
 npx translate-docs --verbose
 ```
+
+### GitHub Actions Integration
+
+You can automate translations using GitHub Actions. The TanStack Dev team provides an official GitHub Action for this purpose.
+
+For more information and usage examples, refer to:
+https://github.com/TanStack-dev/translate-docs-action
