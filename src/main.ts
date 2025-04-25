@@ -43,7 +43,8 @@ export async function main({
     logger.divider();
     logger.info(`language: ${lang} (${langConfig.name})`);
 
-    const translatedRoot = path.join(docsRoot, lang);
+    // Convert language to lowercase to match the folder name
+    const translatedRoot = path.join(docsRoot, lang.toLowerCase());
     const translatedConfigPath = path.join(translatedRoot, 'config.json');
     logger.debug(`Target root: ${translatedRoot}`);
     logger.debug(`Target config: ${translatedConfigPath}`);
