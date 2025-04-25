@@ -24,6 +24,7 @@ export interface MainConfig {
   pattern?: string;
   listOnly?: boolean;
   updateConfigOnly?: boolean;
+  targetLanguage?: string;
 }
 
 export interface TranslationResult {

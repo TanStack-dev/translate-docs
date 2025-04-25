@@ -23,8 +23,22 @@ export async function main({
   pattern,
   listOnly,
   updateConfigOnly,
+  targetLanguage,
 }: MainConfig): Promise<void> {
-  const LANGUAGES = Object.keys(langs);
+  // If targetLanguage is specified, filter the langs object to only include that language
+  const filteredLangs = targetLanguage 
+    ? Object.fromEntries(
+        Object.entries(langs).filter(([key]) => key.toLowerCase() === targetLanguage.toLowerCase())
+      )
+    : langs;
+    
+  // If targetLanguage was specified but not found in langs, show a warning
+  if (targetLanguage && Object.keys(filteredLangs).length === 0) {
+    logger.warn(`Target language "${targetLanguage}" not found in configuration. Available languages: ${Object.keys(langs).join(', ')}`);
+    return;
+  }
+
+  const LANGUAGES = Object.keys(filteredLangs);
 
   logger.divider();
   logger.info(
@@ -39,7 +53,7 @@ export async function main({
 
   const docsConfig = JSON.parse(await fs$.readFile(docsConfigPath, 'utf8'));
 
-  for (const [lang, langConfig] of Object.entries(langs)) {
+  for (const [lang, langConfig] of Object.entries(filteredLangs)) {
     logger.divider();
     logger.info(`language: ${lang} (${langConfig.name})`);
 

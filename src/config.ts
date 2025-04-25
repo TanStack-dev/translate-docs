@@ -4,6 +4,7 @@ import { logger } from './logger';
 
 interface Options {
   config?: string;
+  targetLanguage?: string;
 }
 
 export async function getConfig(

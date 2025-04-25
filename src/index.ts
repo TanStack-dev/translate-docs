@@ -28,6 +28,10 @@ program
     '-u, --update-config-only',
     'Only update config without processing docs',
   )
+  .option(
+    '-t, --target-language <language>',
+    'Specify the target language code for translation (e.g., "zh-CN", "fr", "es")',
+  )
   .action(
     async (options: {
       config?: string;
@@ -35,6 +39,7 @@ program
       pattern?: string;
       listOnly?: boolean;
       updateConfigOnly?: boolean;
+      targetLanguage?: string;
     }) => {
       if (options.verbose) {
         logger.setVerbose(true);
@@ -49,6 +54,7 @@ program
           pattern: options.pattern,
           listOnly: options.listOnly,
           updateConfigOnly: options.updateConfigOnly,
+          targetLanguage: options.targetLanguage,
         });
       }
       logger.success('Process completed successfully');
