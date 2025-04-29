@@ -23,6 +23,10 @@ program
     '-p, --pattern <pattern>',
     'File pattern to match for updating (e.g., "*.md" or "docs/**/*.md"). The .md extension is optional.',
   )
+  .option(
+    '-i, --ignore <pattern>',
+    'File pattern to exclude from updating (e.g., "internal/*.md" or "docs/examples/**"). The .md extension is optional.',
+  )
   .option('-l, --list-only', 'Only list file status without updating docs')
   .option(
     '-u, --update-config-only',
@@ -37,6 +41,7 @@ program
       config?: string;
       verbose?: boolean;
       pattern?: string;
+      ignore?: string;
       listOnly?: boolean;
       updateConfigOnly?: boolean;
       targetLanguage?: string;
@@ -51,7 +56,8 @@ program
       for (const config of configs) {
         await main({
           ...config,
-          pattern: options.pattern,
+          ...(options.pattern ? { pattern: options.pattern } : {}),
+          ...(options.ignore ? { ignore: options.ignore } : {}),
           listOnly: options.listOnly,
           updateConfigOnly: options.updateConfigOnly,
           targetLanguage: options.targetLanguage,

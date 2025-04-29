@@ -21,20 +21,27 @@ export async function main({
   docsRoot,
   docsContext,
   pattern,
+  ignore,
   listOnly,
   updateConfigOnly,
   targetLanguage,
 }: MainConfig): Promise<void> {
   // If targetLanguage is specified, filter the langs object to only include that language
-  const filteredLangs = targetLanguage 
+  const filteredLangs = targetLanguage
     ? Object.fromEntries(
-        Object.entries(langs).filter(([key]) => key.toLowerCase() === targetLanguage.toLowerCase())
+        Object.entries(langs).filter(
+          ([key]) => key.toLowerCase() === targetLanguage.toLowerCase(),
+        ),
       )
     : langs;
-    
+
   // If targetLanguage was specified but not found in langs, show a warning
   if (targetLanguage && Object.keys(filteredLangs).length === 0) {
-    logger.warn(`Target language "${targetLanguage}" not found in configuration. Available languages: ${Object.keys(langs).join(', ')}`);
+    logger.warn(
+      `Target language "${targetLanguage}" not found in configuration. Available languages: ${Object.keys(
+        langs,
+      ).join(', ')}`,
+    );
     return;
   }
 
@@ -91,6 +98,53 @@ export async function main({
     // Extract all document paths
     const docPaths = extractDocPaths(docsConfig);
 
+    // Process pattern and ignore to remove docsRoot prefix if present
+    let processedPattern = pattern;
+    let processedIgnore = ignore;
+
+    // Normalize docsRoot for path comparison (ensure it has no trailing slash)
+    const normalizedDocsRoot = docsRoot.endsWith('/')
+      ? docsRoot.slice(0, -1)
+      : docsRoot;
+    const docsRootName = path.basename(normalizedDocsRoot);
+
+    // Process pattern if it exists
+    if (pattern) {
+      // Check if pattern starts with docsRoot or its basename
+      if (pattern.startsWith(`${normalizedDocsRoot}/`)) {
+        // Strip full docsRoot path from pattern
+        processedPattern = pattern.substring(normalizedDocsRoot.length + 1);
+        logger.debug(
+          `Normalized pattern from ${pattern} to ${processedPattern}`,
+        );
+      } else if (pattern.startsWith(`${docsRootName}/`)) {
+        // Strip docsRoot basename from pattern
+        processedPattern = pattern.substring(docsRootName.length + 1);
+        logger.debug(
+          `Normalized pattern from ${pattern} to ${processedPattern}`,
+        );
+      }
+      logger.info(`Using pattern: ${processedPattern}`);
+    }
+
+    // Process ignore patterns if they exist
+    if (ignore) {
+      const ignorePatterns = ignore.split(',');
+      const processedIgnorePatterns = ignorePatterns.map((ignorePattern) => {
+        if (ignorePattern.startsWith(`${normalizedDocsRoot}/`)) {
+          // Strip full docsRoot path from ignore pattern
+          return ignorePattern.substring(normalizedDocsRoot.length + 1);
+        }
+        if (ignorePattern.startsWith(`${docsRootName}/`)) {
+          // Strip docsRoot basename from ignore pattern
+          return ignorePattern.substring(docsRootName.length + 1);
+        }
+        return ignorePattern;
+      });
+      processedIgnore = processedIgnorePatterns.join(',');
+      logger.info(`Using ignore patterns: ${processedIgnore.split(',')}`);
+    }
+
     // Filter paths based on pattern if provided using micromatch
     // micromatch supports glob patterns like:
     // - * matches any characters (e.g., "docs/*" matches all files in docs directory)
@@ -101,17 +155,22 @@ export async function main({
     // - "docs/tutorial*" matches paths starting with "docs/tutorial"
     // - "*tutorial" matches paths ending with "tutorial"
     // - "docs/*/tutorial" matches tutorial files in any subdirectory of docs
-    const filteredDocPaths = pattern
+    const filteredDocPaths = processedPattern
       ? (() => {
           // Normalize the pattern by removing .md extension if present
           // This handles cases where users specify patterns like "*.md" or "docs/**/*.md"
-          const normalizedPattern = pattern.endsWith('.md') 
-            ? pattern.slice(0, -3) 
-            : pattern;
-          
+          const normalizedPattern = processedPattern.endsWith('.md')
+            ? processedPattern.slice(0, -3)
+            : processedPattern;
+
           return micromatch(docPaths, normalizedPattern);
         })()
       : docPaths;
+
+    // Apply ignore patterns if provided
+    const finalDocPaths = processedIgnore
+      ? micromatch.not(filteredDocPaths, processedIgnore.split(','))
+      : filteredDocPaths;
 
     // Extract path to label mappings from translated config
     const pathToLabelMap = extractPathToLabelMap(translatedConfig);
@@ -121,7 +180,7 @@ export async function main({
 
     // Log document status
     const tableData = [];
-    for (const docPath of filteredDocPaths) {
+    for (const docPath of finalDocPaths) {
       const sourcePath = path.join(docsRoot, `${docPath}.md`);
       const targetPath = path.join(translatedRoot, `${docPath}.md`);
       const [shouldUpdate, shouldTranslate, reason] = await getDocUpdateStatus({
@@ -148,7 +207,7 @@ export async function main({
     console.log('\n📋 Document Status:\n');
     console.table(tableData);
     logger.info(
-      `Found ${tasks.length}/${filteredDocPaths.length} documents to translate`,
+      `Found ${tasks.length}/${finalDocPaths.length} documents to translate`,
     );
 
     let completedRefDocs = 0;
