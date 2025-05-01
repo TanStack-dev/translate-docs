@@ -23,6 +23,7 @@ export interface MainConfig {
   docsContext: string;
   pattern?: string;
   ignore?: string;
+  copyPath?: string;
   listOnly?: boolean;
   updateConfigOnly?: boolean;
   targetLanguage?: string;

@@ -16,12 +16,53 @@ import {
 } from './utils';
 import { MainConfig } from './types';
 
+/**
+ * Normalizes a pattern by removing docsRoot prefix if present
+ */
+function normalizePattern(
+  pattern: string,
+  normalizedDocsRoot: string,
+  docsRootName: string,
+): string {
+  // Check if pattern starts with docsRoot or its basename
+  if (pattern.startsWith(`${normalizedDocsRoot}/`)) {
+    // Strip full docsRoot path from pattern
+    const processed = pattern.substring(normalizedDocsRoot.length + 1);
+    logger.debug(`Normalized pattern from ${pattern} to ${processed}`);
+    return processed;
+  } else if (pattern.startsWith(`${docsRootName}/`)) {
+    // Strip docsRoot basename from pattern
+    const processed = pattern.substring(docsRootName.length + 1);
+    logger.debug(`Normalized pattern from ${pattern} to ${processed}`);
+    return processed;
+  }
+  return pattern;
+}
+
+/**
+ * Normalizes comma-separated patterns
+ */
+function normalizePatterns(
+  patternsStr: string | undefined,
+  normalizedDocsRoot: string,
+  docsRootName: string,
+): string[] {
+  if (!patternsStr) {
+    return [];
+  }
+  
+  return patternsStr
+    .split(',')
+    .map(p => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName));
+}
+
 export async function main({
   langs,
   docsRoot,
   docsContext,
   pattern,
   ignore,
+  copyPath,
   listOnly,
   updateConfigOnly,
   targetLanguage,
@@ -60,6 +101,42 @@ export async function main({
 
   const docsConfig = JSON.parse(await fs$.readFile(docsConfigPath, 'utf8'));
 
+  // Normalize docsRoot for path comparison (ensure it has no trailing slash)
+  const normalizedDocsRoot = docsRoot.endsWith('/')
+    ? docsRoot.slice(0, -1)
+    : docsRoot;
+  const docsRootName = path.basename(normalizedDocsRoot);
+
+  // Process pattern if it exists
+  const processedPattern = pattern 
+    ? normalizePattern(pattern, normalizedDocsRoot, docsRootName)
+    : undefined;
+    
+  // Process ignore patterns
+  const processedIgnorePatterns = normalizePatterns(
+    ignore,
+    normalizedDocsRoot, 
+    docsRootName
+  );
+  
+  // Process copy paths
+  const processedCopyPathPatterns = normalizePatterns(
+    copyPath,
+    normalizedDocsRoot,
+    docsRootName
+  );
+  
+  // Log patterns if provided
+  if (processedPattern) {
+    logger.info(`Using pattern: ${processedPattern}`);
+  }
+  if (processedIgnorePatterns.length > 0) {
+    logger.info(`Using ignore patterns: ${processedIgnorePatterns.join(', ')}`);
+  }
+  if (processedCopyPathPatterns.length > 0) {
+    logger.info(`Using copy-path patterns: ${processedCopyPathPatterns.join(', ')}`);
+  }
+
   for (const [lang, langConfig] of Object.entries(filteredLangs)) {
     logger.divider();
     logger.info(`language: ${lang} (${langConfig.name})`);
@@ -93,84 +170,47 @@ export async function main({
         logger.info('Config structure unchanged, no translation needed.');
       }
     }
+    
     if (updateConfigOnly) return;
 
     // Extract all document paths
     const docPaths = extractDocPaths(docsConfig);
 
-    // Process pattern and ignore to remove docsRoot prefix if present
-    let processedPattern = pattern;
-    let processedIgnore = ignore;
-
-    // Normalize docsRoot for path comparison (ensure it has no trailing slash)
-    const normalizedDocsRoot = docsRoot.endsWith('/')
-      ? docsRoot.slice(0, -1)
-      : docsRoot;
-    const docsRootName = path.basename(normalizedDocsRoot);
-
-    // Process pattern if it exists
-    if (pattern) {
-      // Check if pattern starts with docsRoot or its basename
-      if (pattern.startsWith(`${normalizedDocsRoot}/`)) {
-        // Strip full docsRoot path from pattern
-        processedPattern = pattern.substring(normalizedDocsRoot.length + 1);
-        logger.debug(
-          `Normalized pattern from ${pattern} to ${processedPattern}`,
-        );
-      } else if (pattern.startsWith(`${docsRootName}/`)) {
-        // Strip docsRoot basename from pattern
-        processedPattern = pattern.substring(docsRootName.length + 1);
-        logger.debug(
-          `Normalized pattern from ${pattern} to ${processedPattern}`,
-        );
-      }
-      logger.info(`Using pattern: ${processedPattern}`);
+    // Apply file filtering based on patterns
+    let filteredPaths = docPaths;
+    
+    // Step 1: Apply include pattern if specified
+    if (processedPattern) {
+      // Normalize the pattern by removing .md extension if present
+      const normalizedPattern = processedPattern.endsWith('.md')
+        ? processedPattern.slice(0, -3)
+        : processedPattern;
+        
+      filteredPaths = micromatch(filteredPaths, normalizedPattern);
     }
-
-    // Process ignore patterns if they exist
-    if (ignore) {
-      const ignorePatterns = ignore.split(',');
-      const processedIgnorePatterns = ignorePatterns.map((ignorePattern) => {
-        if (ignorePattern.startsWith(`${normalizedDocsRoot}/`)) {
-          // Strip full docsRoot path from ignore pattern
-          return ignorePattern.substring(normalizedDocsRoot.length + 1);
-        }
-        if (ignorePattern.startsWith(`${docsRootName}/`)) {
-          // Strip docsRoot basename from ignore pattern
-          return ignorePattern.substring(docsRootName.length + 1);
-        }
-        return ignorePattern;
-      });
-      processedIgnore = processedIgnorePatterns.join(',');
-      logger.info(`Using ignore patterns: ${processedIgnore.split(',')}`);
+    
+    // Step 2: Apply ignore patterns if specified
+    if (processedIgnorePatterns.length > 0) {
+      // Remove .md extension from patterns if present
+      const normalizedIgnorePatterns = processedIgnorePatterns.map(p => 
+        p.endsWith('.md') ? p.slice(0, -3) : p
+      );
+      
+      filteredPaths = micromatch.not(filteredPaths, normalizedIgnorePatterns);
     }
-
-    // Filter paths based on pattern if provided using micromatch
-    // micromatch supports glob patterns like:
-    // - * matches any characters (e.g., "docs/*" matches all files in docs directory)
-    // - ? matches any single character (e.g., "docs/?.md" matches single-character filenames)
-    // - [!...] matches any character not in the brackets (e.g., "docs/[!a]*" matches files not starting with 'a')
-    // Examples:
-    // - "*tutorial*" matches any path containing "tutorial"
-    // - "docs/tutorial*" matches paths starting with "docs/tutorial"
-    // - "*tutorial" matches paths ending with "tutorial"
-    // - "docs/*/tutorial" matches tutorial files in any subdirectory of docs
-    const filteredDocPaths = processedPattern
-      ? (() => {
-          // Normalize the pattern by removing .md extension if present
-          // This handles cases where users specify patterns like "*.md" or "docs/**/*.md"
-          const normalizedPattern = processedPattern.endsWith('.md')
-            ? processedPattern.slice(0, -3)
-            : processedPattern;
-
-          return micromatch(docPaths, normalizedPattern);
-        })()
-      : docPaths;
-
-    // Apply ignore patterns if provided
-    const finalDocPaths = processedIgnore
-      ? micromatch.not(filteredDocPaths, processedIgnore.split(','))
-      : filteredDocPaths;
+    
+    // Create a set for paths that should be copied without translation
+    const copyWithoutTranslationSet = new Set<string>();
+    if (processedCopyPathPatterns.length > 0) {
+      // Remove .md extension from patterns if present
+      const normalizedCopyPatterns = processedCopyPathPatterns.map(p => 
+        p.endsWith('.md') ? p.slice(0, -3) : p
+      );
+      
+      // Find matches and add to set
+      const copyMatches = micromatch(filteredPaths, normalizedCopyPatterns);
+      copyMatches.forEach(match => copyWithoutTranslationSet.add(match));
+    }
 
     // Extract path to label mappings from translated config
     const pathToLabelMap = extractPathToLabelMap(translatedConfig);
@@ -180,34 +220,44 @@ export async function main({
 
     // Log document status
     const tableData = [];
-    for (const docPath of finalDocPaths) {
+    
+    for (const docPath of filteredPaths) {
       const sourcePath = path.join(docsRoot, `${docPath}.md`);
       const targetPath = path.join(translatedRoot, `${docPath}.md`);
       const [shouldUpdate, shouldTranslate, reason] = await getDocUpdateStatus({
         sourcePath,
         targetPath,
       });
+      
+      // Check if this path should be copied without translation
+      const isCopyPath = copyWithoutTranslationSet.has(docPath);
+      
+      // If it's in copyPath list, we should force copy without translation
+      const finalShouldTranslate = isCopyPath ? false : shouldTranslate;
+      
       tableData.push({
         Source: sourcePath,
         Target: targetPath,
         'Needs Update': shouldUpdate ? '✅ Yes' : '❌ No',
-        'Needs Translation': shouldTranslate ? '✅ Yes' : '❌ No',
-        Reason: reason || 'No changes needed',
+        'Needs Translation': finalShouldTranslate ? '✅ Yes' : '❌ No',
+        'Copy Only': isCopyPath ? '✅ Yes' : '❌ No',
+        Reason: isCopyPath ? 'Marked for copy only' : (reason || 'No changes needed'),
       });
 
       if (shouldUpdate) {
         tasks.push({
           docPath,
           sourcePath,
-          shouldTranslate,
+          shouldTranslate: finalShouldTranslate,
           targetPath,
         });
       }
     }
+    
     console.log('\n📋 Document Status:\n');
     console.table(tableData);
     logger.info(
-      `Found ${tasks.length}/${finalDocPaths.length} documents to translate`,
+      `Found ${tasks.length}/${filteredPaths.length} documents to translate`,
     );
 
     let completedRefDocs = 0;

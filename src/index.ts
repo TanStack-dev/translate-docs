@@ -27,6 +27,10 @@ program
     '-i, --ignore <pattern>',
     'File pattern to exclude from updating (e.g., "internal/*.md" or "docs/examples/**"). The .md extension is optional.',
   )
+  .option(
+    '-y, --copy-path <pattern>',
+    'File pattern to copy without translation (e.g., "reference/**"). The .md extension is optional.',
+  )
   .option('-l, --list-only', 'Only list file status without updating docs')
   .option(
     '-u, --update-config-only',
@@ -42,6 +46,7 @@ program
       verbose?: boolean;
       pattern?: string;
       ignore?: string;
+      copyPath?: string;
       listOnly?: boolean;
       updateConfigOnly?: boolean;
       targetLanguage?: string;
@@ -58,6 +63,7 @@ program
           ...config,
           ...(options.pattern ? { pattern: options.pattern } : {}),
           ...(options.ignore ? { ignore: options.ignore } : {}),
+          ...(options.copyPath ? { copyPath: options.copyPath } : {}),
           listOnly: options.listOnly,
           updateConfigOnly: options.updateConfigOnly,
           targetLanguage: options.targetLanguage,
