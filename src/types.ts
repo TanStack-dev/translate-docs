@@ -21,9 +21,9 @@ export interface MainConfig {
   langs: Record<string, LangConfig>;
   docsRoot: string;
   docsContext: string;
-  pattern?: string;
-  ignore?: string;
-  copyPath?: string;
+  pattern?: string | string[];
+  ignore?: string | string[];
+  copyPath?: string | string[];
   listOnly?: boolean;
   updateConfigOnly?: boolean;
   targetLanguage?: string;

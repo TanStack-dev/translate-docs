@@ -40,20 +40,29 @@ function normalizePattern(
 }
 
 /**
- * Normalizes comma-separated patterns
+ * Normalizes comma-separated patterns or array of patterns
  */
 function normalizePatterns(
-  patternsStr: string | undefined,
+  patterns: string | string[] | undefined,
   normalizedDocsRoot: string,
   docsRootName: string,
 ): string[] {
-  if (!patternsStr) {
+  if (!patterns) {
     return [];
   }
   
-  return patternsStr
+  // If patterns is already an array, process each item
+  if (Array.isArray(patterns)) {
+    return patterns
+      .map(p => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName))
+      .filter(p => p !== '');
+  }
+  
+  // Otherwise, treat as a string and split by comma
+  return patterns
     .split(',')
-    .map(p => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName));
+    .map(p => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName))
+    .filter(p => p !== '');
 }
 
 export async function main({
@@ -107,11 +116,13 @@ export async function main({
     : docsRoot;
   const docsRootName = path.basename(normalizedDocsRoot);
 
-  // Process pattern if it exists
-  const processedPattern = pattern 
-    ? normalizePattern(pattern, normalizedDocsRoot, docsRootName)
-    : undefined;
-    
+  // Process pattern(s)
+  const processedPatterns = normalizePatterns(
+    pattern,
+    normalizedDocsRoot,
+    docsRootName
+  );
+  
   // Process ignore patterns
   const processedIgnorePatterns = normalizePatterns(
     ignore,
@@ -127,8 +138,8 @@ export async function main({
   );
   
   // Log patterns if provided
-  if (processedPattern) {
-    logger.info(`Using pattern: ${processedPattern}`);
+  if (processedPatterns.length > 0) {
+    logger.info(`Using patterns: ${processedPatterns.join(', ')}`);
   }
   if (processedIgnorePatterns.length > 0) {
     logger.info(`Using ignore patterns: ${processedIgnorePatterns.join(', ')}`);
@@ -180,13 +191,13 @@ export async function main({
     let filteredPaths = docPaths;
     
     // Step 1: Apply include pattern if specified
-    if (processedPattern) {
-      // Normalize the pattern by removing .md extension if present
-      const normalizedPattern = processedPattern.endsWith('.md')
-        ? processedPattern.slice(0, -3)
-        : processedPattern;
-        
-      filteredPaths = micromatch(filteredPaths, normalizedPattern);
+    if (processedPatterns.length > 0) {
+      // Normalize the patterns by removing .md extension if present
+      const normalizedPatterns = processedPatterns.map(p =>
+        p.endsWith('.md') ? p.slice(0, -3) : p
+      );
+      
+      filteredPaths = micromatch(filteredPaths, normalizedPatterns);
     }
     
     // Step 2: Apply ignore patterns if specified
