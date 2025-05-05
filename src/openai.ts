@@ -22,16 +22,22 @@ interface TranslateDocumentParams {
   context?: string;
 }
 
-// Check if API key is available
-if (!process.env.OPENAI_API_KEY) {
-  console.error('Error: OPENAI_API_KEY is not set.');
-  process.exit(1);
-}
+// Initialize OpenAI client if API key is available
+export const openai = process.env.OPENAI_API_KEY 
+  ? new OpenAI({
+      baseURL: 'https://api.deepseek.com',
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
-export const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Check for API key only when translation functions are called
+export function checkApiKey() {
+  if (!process.env.OPENAI_API_KEY) {
+    logger.error('Error: OPENAI_API_KEY is not set.');
+    return false;
+  }
+  return true;
+}
 
 export const model = 'deepseek-chat';
 
@@ -109,6 +115,10 @@ export async function $translateConfig({
   langConfig,
   docsContext,
 }: TranslateConfigParams): Promise<DocsConfig> {
+  if (!checkApiKey()) {
+    throw new Error('OPENAI_API_KEY is not set.');
+  }
+  
   // Create a deep copy of the config to avoid modifying the original
   const configCopy = JSON.parse(JSON.stringify(docsConfig));
 
@@ -152,7 +162,7 @@ ${labelFields
   })
   .join('\n')}`;
 
-  const response = await openai.chat.completions.create({
+  const response = await openai!.chat.completions.create({
     model: model,
     messages: [
       {
@@ -244,6 +254,10 @@ export async function $translateDocument({
   langConfig,
   context = '',
 }: TranslateDocumentParams): Promise<string> {
+  if (!checkApiKey()) {
+    throw new Error('OPENAI_API_KEY is not set.');
+  }
+  
   const textLength = content.length;
   const prompt = `
 Translate the following documentation from English to ${langConfig.name}.
@@ -264,7 +278,7 @@ HERE IS THE TEXT TO TRANSLATE:
     } characters`,
   );
 
-  const response = await openai.chat.completions.create({
+  const response = await openai!.chat.completions.create({
     model: model,
     messages: [
       {
