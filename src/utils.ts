@@ -503,3 +503,53 @@ export async function findDocFiles(
       : relativePath;
   });
 }
+
+/**
+ * Normalizes a pattern by removing docsRoot prefix if present
+ */
+export function normalizePattern(
+  pattern: string,
+  normalizedDocsRoot: string,
+  docsRootName: string,
+): string {
+  // Check if pattern starts with docsRoot or its basename
+  if (pattern.startsWith(`${normalizedDocsRoot}/`)) {
+    // Strip full docsRoot path from pattern
+    const processed = pattern.substring(normalizedDocsRoot.length + 1);
+    logger.debug(`Normalized pattern from ${pattern} to ${processed}`);
+    return processed;
+  }
+  if (pattern.startsWith(`${docsRootName}/`)) {
+    // Strip docsRoot basename from pattern
+    const processed = pattern.substring(docsRootName.length + 1);
+    logger.debug(`Normalized pattern from ${pattern} to ${processed}`);
+    return processed;
+  }
+  return pattern;
+}
+
+/**
+ * Normalizes comma-separated patterns or array of patterns
+ */
+export function normalizePatterns(
+  patterns: string | string[] | undefined,
+  normalizedDocsRoot: string,
+  docsRootName: string,
+): string[] {
+  if (!patterns) {
+    return [];
+  }
+
+  // If patterns is already an array, process each item
+  if (Array.isArray(patterns)) {
+    return patterns
+      .map((p) => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName))
+      .filter((p) => p !== '');
+  }
+
+  // Otherwise, treat as a string and split by comma
+  return patterns
+    .split(',')
+    .map((p) => normalizePattern(p.trim(), normalizedDocsRoot, docsRootName))
+    .filter((p) => p !== '');
+}
