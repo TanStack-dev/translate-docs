@@ -281,22 +281,6 @@ export function shouldTranslateDoc(
     return [false, 'Document has no content, no translation needed'];
   }
 
-  const needsTranslation = frontmatter.data['needs-translation'];
-
-  if (needsTranslation === true) {
-    return [
-      true,
-      'Ref-document has needs-translation=true metadata, needs translation',
-    ];
-  }
-
-  if (needsTranslation === false) {
-    return [
-      false,
-      'Ref-document has needs-translation=false metadata, no translation needed',
-    ];
-  }
-
   const replace = frontmatter.data.replace as
     | Record<string, string>
     | undefined;
