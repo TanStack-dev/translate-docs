@@ -1,7 +1,7 @@
 export default {
   langs: {
-    'zh-Hans': {
-      name: 'Simplified Chinese',
+    "zh-Hans": {
+      name: "Simplified Chinese",
       // 翻译规则和指南
       guide: `
     - For technical terms that should not be fully translated, use the format: "中文翻译 (English term)"
@@ -13,8 +13,8 @@ export default {
       // 格式: 'English term': '中文翻译'
       terms: {},
     },
-    'zh-Hant': {
-      name: 'Traditional Chinese',
+    "zh-Hant": {
+      name: "Traditional Chinese",
       // 翻譯規則和指南
       guide: `
     - For technical terms that should not be fully translated, use the format: "繁體中文翻譯 (English term)"
@@ -27,7 +27,7 @@ export default {
       terms: {},
     },
     ja: {
-      name: 'Japanese',
+      name: "Japanese",
       guide: `
     - For technical terms that should not be fully translated, use the format: "日本語訳 (English term)"
       Example: "サーバーサイドレンダリング (SSR)" instead of just "SSR" or just "サーバーサイドレンダリング"
@@ -37,7 +37,7 @@ export default {
       terms: {},
     },
     es: {
-      name: 'Spanish',
+      name: "Spanish",
       guide: `
     - For technical terms that should not be fully translated, use the format: "Traducción en español (English term)"
       Example: "Renderizado del lado del servidor (SSR)" instead of just "SSR" or just "Renderizado del lado del servidor"
@@ -47,7 +47,7 @@ export default {
       terms: {},
     },
     de: {
-      name: 'German',
+      name: "German",
       guide: `
     - For technical terms that should not be fully translated, use the format: "Deutsche Übersetzung (English term)"
       Example: "Server-seitiges Rendering (SSR)" instead of just "SSR" or just "Server-seitiges Rendering"
@@ -57,7 +57,7 @@ export default {
       terms: {},
     },
     fr: {
-      name: 'French',
+      name: "French",
       guide: `
     - For technical terms that should not be fully translated, use the format: "Traduction française (English term)"
       Example: "Rendu côté serveur (SSR)" instead of just "SSR" or just "Rendu côté serveur"
@@ -67,7 +67,7 @@ export default {
       terms: {},
     },
     ru: {
-      name: 'Russian',
+      name: "Russian",
       guide: `
     - For technical terms that should not be fully translated, use the format: "Русский перевод (English term)"
       Example: "Рендеринг на стороне сервера (SSR)" instead of just "SSR" or just "Рендеринг на стороне сервера"
@@ -77,7 +77,7 @@ export default {
       terms: {},
     },
     ar: {
-      name: 'Arabic',
+      name: "Arabic",
       guide: `
     - For technical terms that should not be fully translated, use the format: "الترجمة العربية (English term)"
       Example: "العرض من جانب الخادم (SSR)" instead of just "SSR" or just "العرض من جانب الخادم"
@@ -87,6 +87,37 @@ export default {
       terms: {},
     },
   },
-  docsRoot: 'docs',
-  docsContext: '@tanstack-dev/translate-docs is a utility for translating TanStack documentation into multiple languages.',
-}
+  docsRoot: "docs",
+  docsContext:
+    "@tanstack-dev/translate-docs is a utility for translating TanStack documentation into multiple languages.",
+
+  // Optional: Specify docs path patterns to find files directly from filesystem
+  // This is useful when you need to translate files not referenced in the config.json
+  docsPath: [
+    "**/*.md", // Find all Markdown files in docsRoot
+  ],
+
+  // Optional: Specify file patterns to include for translation (glob pattern)
+  // Only files matching these patterns will be considered for translation
+  pattern: [
+    "getting-started/**/*.md", // All files in getting-started directory
+    "guides/*.md", // All files directly in guides directory
+    "reference/api/*.md", // All API reference docs
+  ],
+
+  // Optional: Specify file patterns to exclude from translation (glob pattern)
+  // Files matching these patterns will be skipped
+  ignore: [
+    "examples/**", // Skip all files in examples directory
+    "internal/**", // Skip internal documentation
+    "**/*.draft.md", // Skip draft documents
+  ],
+
+  // Optional: Specify files that should be copied without translation (glob pattern)
+  // Files matching these patterns will be copied as-is without translation
+  copyPath: [
+    "reference/changelog.md", // Copy changelog without translation
+    "assets/**", // Copy asset files without translation
+    "**/*.example.md", // Copy example files without translation
+  ],
+};

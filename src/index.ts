@@ -31,6 +31,10 @@ program
     '-y, --copy-path <pattern>',
     'File pattern to copy without translation (e.g., "reference/**"). The .md extension is optional.',
   )
+  .option(
+    '-d, --docs-path <pattern>',
+    'File pattern for docs to translate, useful when not relying on docsConfig (e.g., "**/*.md"). The .md extension is optional.',
+  )
   .option('-l, --list-only', 'Only list file status without updating docs')
   .option(
     '-u, --update-config-only',
@@ -47,6 +51,7 @@ program
       pattern?: string;
       ignore?: string;
       copyPath?: string;
+      docsPath?: string;
       listOnly?: boolean;
       updateConfigOnly?: boolean;
       targetLanguage?: string;
@@ -64,6 +69,7 @@ program
           ...(options.pattern ? { pattern: options.pattern } : {}),
           ...(options.ignore ? { ignore: options.ignore } : {}),
           ...(options.copyPath ? { copyPath: options.copyPath } : {}),
+          ...(options.docsPath ? { docsPath: options.docsPath } : {}),
           listOnly: options.listOnly,
           updateConfigOnly: options.updateConfigOnly,
           targetLanguage: options.targetLanguage,
