@@ -1,55 +1,22 @@
 import * as fs$ from 'node:fs/promises';
 import * as path from 'node:path';
 import micromatch from 'micromatch';
-import { glob } from 'glob';
+
 
 import { executeInBatches } from './batch';
 import { logger } from './logger';
 import { $translateConfig } from './openai';
 import {
   copyDoc,
-  extractDocPaths,
+  
   extractPathToLabelMap,
   getTranslatedConfig,
   shouldTranslateConfig,
   getDocUpdateStatus,
   translateDoc,
+  findDocFiles,
 } from './utils';
 import { MainConfig } from './types';
-
-/**
- * Finds Markdown files based on glob patterns
- */
-async function findDocFiles(
-  docsRoot: string,
-  patterns: string[],
-): Promise<string[]> {
-  const files: string[] = [];
-
-  for (const pattern of patterns) {
-    const fullPattern = path.join(docsRoot, pattern);
-    // Ensure the pattern has the .md extension
-    const filePattern = fullPattern.endsWith('.md')
-      ? fullPattern
-      : `${fullPattern}.md`;
-
-    try {
-      // Use the glob function with ES modules syntax
-      const matches = await glob.glob(filePattern);
-      files.push(...matches);
-    } catch (error) {
-      logger.error(`Error finding files for pattern ${pattern}: ${error}`);
-    }
-  }
-
-  // Convert absolute paths to paths relative to docsRoot without .md extension
-  return files.map((file) => {
-    const relativePath = path.relative(docsRoot, file);
-    return relativePath.endsWith('.md')
-      ? relativePath.slice(0, -3)
-      : relativePath;
-  });
-}
 
 /**
  * Normalizes a pattern by removing docsRoot prefix if present

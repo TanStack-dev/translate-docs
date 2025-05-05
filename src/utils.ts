@@ -6,6 +6,7 @@ import { logger } from './logger';
 import path from 'node:path';
 import { $translateDocument } from './openai';
 import { getSourceRefContent } from './ref-docs';
+import { glob } from 'glob';
 interface Config {
   to?: string;
   label?: string;
@@ -467,4 +468,38 @@ export async function translateDoc({
 
   await fs$.writeFile(targetPath, newContent, 'utf8');
   logger.debug(`Completed translation of ${path.basename(sourcePath)}`);
+}
+
+/**
+ * Finds Markdown files based on glob patterns
+ */
+export async function findDocFiles(
+  docsRoot: string,
+  patterns: string[],
+): Promise<string[]> {
+  const files: string[] = [];
+
+  for (const pattern of patterns) {
+    const fullPattern = path.join(docsRoot, pattern);
+    // Ensure the pattern has the .md extension
+    const filePattern = fullPattern.endsWith('.md')
+      ? fullPattern
+      : `${fullPattern}.md`;
+
+    try {
+      // Use the glob function with ES modules syntax
+      const matches = await glob.glob(filePattern);
+      files.push(...matches);
+    } catch (error) {
+      logger.error(`Error finding files for pattern ${pattern}: ${error}`);
+    }
+  }
+
+  // Convert absolute paths to paths relative to docsRoot without .md extension
+  return files.map((file) => {
+    const relativePath = path.relative(docsRoot, file);
+    return relativePath.endsWith('.md')
+      ? relativePath.slice(0, -3)
+      : relativePath;
+  });
 }
