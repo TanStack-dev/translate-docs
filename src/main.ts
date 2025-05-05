@@ -284,7 +284,7 @@ export async function main({
     console.log('\n📋 Document Status:\n');
     console.table(tableData);
     logger.info(
-      `Found ${tasks.length}/${filteredPaths.length} documents to translate`,
+      `Found ${tasks.length}/${filteredPaths.length} documents to update`,
     );
 
     let completedRefDocs = 0;

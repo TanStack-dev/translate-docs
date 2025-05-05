@@ -425,6 +425,10 @@ export async function translateDoc({
     }
   }
 
+  logger.debug(
+    `Parsing content from ${sourcePath}, ${JSON.stringify(parsed.data)}`,
+  );
+
   const translationContext = `This is a complete document, title: ${
     parsed.data.title
   } (don't include this in the translation)\n${await buildTranslationContext({
@@ -443,13 +447,24 @@ export async function translateDoc({
   const sourceUpdatedAt = getLastModifiedTimeFromGit(sourcePath).toISOString();
   const translationUpdatedAt = new Date().toISOString();
 
-  const newContent = matter.stringify(translatedContent, {
+  // Create frontmatter data object
+  const frontmatterData = {
     'source-updated-at': sourceUpdatedAt,
     'translation-updated-at': translationUpdatedAt,
     ...parsed.data,
-    title,
-  });
+  };
+  
+  // Only add title to frontmatter if it exists
+  if (title) {
+    frontmatterData.title = title;
+  }
 
+  logger.debug(
+    `Writing translated content, ${JSON.stringify(frontmatterData)}`,
+  );
+  const newContent = matter.stringify(translatedContent, frontmatterData);
+
+  logger.debug(`Writing translated content to ${targetPath}`);
   await fs$.writeFile(targetPath, newContent, 'utf8');
   logger.debug(`Completed translation of ${path.basename(sourcePath)}`);
 }

@@ -26,6 +26,7 @@ export async function executeInBatches<T, R>(
       const result = await fn(item);
       results.push(result);
     } catch (error) {
+      console.error(error);
       logger.error(
         `Error processing batch item: ${
           error instanceof Error ? error.message : String(error)
