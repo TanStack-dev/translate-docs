@@ -26,7 +26,6 @@ export interface MainConfig {
   copyPath?: string | string[];
   docsPath?: string | string[];
   listOnly?: boolean;
-  updateConfigOnly?: boolean;
   targetLanguage?: string;
 }
 

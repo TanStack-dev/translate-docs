@@ -110,7 +110,6 @@ export async function main({
   copyPath,
   docsPath,
   listOnly,
-  updateConfigOnly,
   targetLanguage,
 }: MainConfig): Promise<void> {
   // If targetLanguage is specified, filter the langs object to only include that language
@@ -213,27 +212,11 @@ export async function main({
 
     let translatedConfig = await getTranslatedConfig(translatedConfigPath);
 
-    if (!listOnly) {
-      if (shouldTranslateConfig(docsConfig, translatedConfig)) {
-        logger.info('Config needs translation, updating translation...');
-        translatedConfig = await $translateConfig({
-          docsConfig,
-          langConfig,
-          docsContext,
-        });
-
-        await fs$.writeFile(
-          translatedConfigPath,
-          JSON.stringify(translatedConfig, null, 2),
-          'utf8',
-        );
-        logger.success('Successfully translated config');
-      } else {
-        logger.info('Config structure unchanged, no translation needed.');
-      }
-    }
-
-    if (updateConfigOnly) return;
+    // Add config.json handling to regular document processing instead of handling it separately
+    const configNeedsTranslation = shouldTranslateConfig(
+      docsConfig,
+      translatedConfig,
+    );
 
     // Initialize document paths - will be populated from docsPath or set to empty array
     let docPaths: string[] = [];
@@ -262,15 +245,20 @@ export async function main({
         );
       });
 
-      logger.info(
-        `Found ${filteredPaths.length} files from filesystem`,
-      );
+      logger.info(`Found ${filteredPaths.length} files from filesystem`);
 
       docPaths = filteredPaths;
     } else {
       // If docsPath isn't specified, show a warning that no files will be processed
-      logger.warn('No docsPath specified. No files will be processed. Please provide a docsPath pattern like --docs-path "**/*.md"');
+      logger.warn(
+        'No docsPath specified. No files will be processed. Please provide a docsPath pattern like --docs-path "**/*.md"',
+      );
     }
+
+    // Add config.json as a special entry to be processed with other documents
+    // Using a virtual path 'config.json' without .md extension
+    const configDocPath = 'config.json';
+    docPaths = [configDocPath, ...docPaths];
 
     // Apply file filtering based on patterns
     let filteredPaths = docPaths;
@@ -318,6 +306,31 @@ export async function main({
     const tableData = [];
 
     for (const docPath of filteredPaths) {
+      // Special handling for config.json
+      if (docPath === configDocPath) {
+        tableData.push({
+          Source: docsConfigPath,
+          Target: translatedConfigPath,
+          'Needs Update': configNeedsTranslation ? '✅ Yes' : '❌ No',
+          'Needs Translation': configNeedsTranslation ? '✅ Yes' : '❌ No',
+          'Copy Only': '❌ No',
+          Reason: configNeedsTranslation
+            ? 'Config structure changed'
+            : 'No changes needed',
+        });
+
+        if (configNeedsTranslation) {
+          tasks.push({
+            docPath,
+            sourcePath: docsConfigPath,
+            shouldTranslate: true,
+            targetPath: translatedConfigPath,
+            isConfig: true, // Mark as config file for special handling
+          });
+        }
+        continue;
+      }
+
       const sourcePath = path.join(docsRoot, `${docPath}.md`);
       const targetPath = path.join(translatedRoot, `${docPath}.md`);
       const [shouldUpdate, shouldTranslate, reason] = await getDocUpdateStatus({
@@ -348,6 +361,7 @@ export async function main({
           sourcePath,
           shouldTranslate: finalShouldTranslate,
           targetPath,
+          isConfig: false, // Mark as regular file
         });
       }
     }
@@ -364,7 +378,21 @@ export async function main({
       await executeInBatches(
         tasks,
         async (task) => {
-          if (task.shouldTranslate) {
+          // Special handling for config.json
+          if (task.isConfig) {
+            translatedConfig = await $translateConfig({
+              docsConfig,
+              langConfig,
+              docsContext,
+            });
+
+            await fs$.writeFile(
+              task.targetPath,
+              JSON.stringify(translatedConfig, null, 2),
+              'utf8',
+            );
+            logger.success('Successfully translated config');
+          } else if (task.shouldTranslate) {
             const title = pathToLabelMap[task.docPath];
             await translateDoc({
               sourcePath: task.sourcePath,
