@@ -24,10 +24,6 @@ program
     'File pattern to match for updating (e.g., "*.md" or "docs/**/*.md"). The .md extension is optional.',
   )
   .option(
-    '-i, --ignore <pattern>',
-    'File pattern to exclude from updating (e.g., "internal/*.md" or "docs/examples/**"). The .md extension is optional.',
-  )
-  .option(
     '-y, --copy-path <pattern>',
     'File pattern to copy without translation (e.g., "reference/**"). The .md extension is optional.',
   )
@@ -45,7 +41,6 @@ program
       config?: string;
       verbose?: boolean;
       pattern?: string;
-      ignore?: string;
       copyPath?: string;
       docsPath?: string;
       listOnly?: boolean;
@@ -62,7 +57,6 @@ program
         await main({
           ...config,
           ...(options.pattern ? { pattern: options.pattern } : {}),
-          ...(options.ignore ? { ignore: options.ignore } : {}),
           ...(options.copyPath ? { copyPath: options.copyPath } : {}),
           ...(options.docsPath ? { docsPath: options.docsPath } : {}),
           listOnly: options.listOnly,

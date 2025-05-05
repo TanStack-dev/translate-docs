@@ -21,7 +21,6 @@ export async function main({
   docsRoot,
   docsContext,
   pattern,
-  ignore,
   copyPath,
   docsPath,
   listOnly,
@@ -74,13 +73,6 @@ export async function main({
     docsRootName,
   );
 
-  // Process ignore patterns
-  const processedIgnorePatterns = normalizePatterns(
-    ignore,
-    normalizedDocsRoot,
-    docsRootName,
-  );
-
   // Process copy paths
   const processedCopyPathPatterns = normalizePatterns(
     copyPath,
@@ -103,9 +95,6 @@ export async function main({
   }
   if (processedPatterns.length > 0) {
     logger.info(`Using patterns: ${processedPatterns.join(', ')}`);
-  }
-  if (processedIgnorePatterns.length > 0) {
-    logger.info(`Using ignore patterns: ${processedIgnorePatterns.join(', ')}`);
   }
   if (processedCopyPathPatterns.length > 0) {
     logger.info(
@@ -186,16 +175,6 @@ export async function main({
       );
 
       filteredPaths = micromatch(filteredPaths, normalizedPatterns);
-    }
-
-    // Step 2: Apply ignore patterns if specified
-    if (processedIgnorePatterns.length > 0) {
-      // Remove .md extension from patterns if present
-      const normalizedIgnorePatterns = processedIgnorePatterns.map((p) =>
-        p.endsWith('.md') ? p.slice(0, -3) : p,
-      );
-
-      filteredPaths = micromatch.not(filteredPaths, normalizedIgnorePatterns);
     }
 
     // Create a set for paths that should be copied without translation

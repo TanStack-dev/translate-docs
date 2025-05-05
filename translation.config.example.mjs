@@ -105,14 +105,6 @@ export default {
     'reference/api/*.md', // All API reference docs
   ],
 
-  // Optional: Specify file patterns to exclude from translation (glob pattern)
-  // Files matching these patterns will be skipped
-  ignore: [
-    'examples/**', // Skip all files in examples directory
-    'internal/**', // Skip internal documentation
-    '**/*.draft.md', // Skip draft documents
-  ],
-
   // Optional: Specify files that should be copied without translation (glob pattern)
   // Files matching these patterns will be copied as-is without translation
   copyPath: [

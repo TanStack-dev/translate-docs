@@ -22,7 +22,6 @@ export interface MainConfig {
   docsRoot: string;
   docsContext: string;
   pattern?: string | string[];
-  ignore?: string | string[];
   copyPath?: string | string[];
   docsPath?: string | string[];
   listOnly?: boolean;
