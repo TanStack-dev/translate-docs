@@ -306,7 +306,14 @@ export async function main({
               JSON.stringify(translatedConfig, null, 2),
               'utf8',
             );
-            logger.success('Successfully translated config');
+
+            completedRefDocs++;
+            logger.progress(
+              completedRefDocs,
+              tasks.length,
+              'Updating documents',
+              'Translated config.json',
+            );
           } else if (task.shouldTranslate) {
             const title = pathToLabelMap[task.docPath];
             await translateDoc({
@@ -316,6 +323,14 @@ export async function main({
               docsContext,
               title,
             });
+
+            completedRefDocs++;
+            logger.progress(
+              completedRefDocs,
+              tasks.length,
+              'Updating documents',
+              `Translated ${path.basename(task.sourcePath)}`,
+            );
           } else {
             await copyDoc({
               sourcePath: task.sourcePath,
@@ -323,10 +338,15 @@ export async function main({
               docsRoot,
               translatedRoot,
             });
-          }
 
-          completedRefDocs++;
-          logger.progress(completedRefDocs, tasks.length, 'Updating documents');
+            completedRefDocs++;
+            logger.progress(
+              completedRefDocs,
+              tasks.length,
+              'Updating documents',
+              `Copied ${path.basename(task.sourcePath)}`,
+            );
+          }
         },
         concurrency,
       );
