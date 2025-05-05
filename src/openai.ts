@@ -23,7 +23,7 @@ interface TranslateDocumentParams {
 }
 
 // Initialize OpenAI client if API key is available
-export const openai = process.env.OPENAI_API_KEY 
+export const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
       baseURL: 'https://api.deepseek.com',
       apiKey: process.env.OPENAI_API_KEY,
@@ -118,7 +118,7 @@ export async function $translateConfig({
   if (!checkApiKey()) {
     throw new Error('OPENAI_API_KEY is not set.');
   }
-  
+
   // Create a deep copy of the config to avoid modifying the original
   const configCopy = JSON.parse(JSON.stringify(docsConfig));
 
@@ -257,7 +257,7 @@ export async function $translateDocument({
   if (!checkApiKey()) {
     throw new Error('OPENAI_API_KEY is not set.');
   }
-  
+
   const textLength = content.length;
   const prompt = `
 Translate the following documentation from English to ${langConfig.name}.

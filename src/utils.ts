@@ -453,7 +453,7 @@ export async function translateDoc({
     'translation-updated-at': translationUpdatedAt,
     ...parsed.data,
   };
-  
+
   // Only add title to frontmatter if it exists
   if (title) {
     frontmatterData.title = title;

@@ -66,11 +66,16 @@ class Logger {
   /**
    * Log progress of a batch operation
    */
-  progress(current: number, total: number, message: string, actionMessage?: string): void {
+  progress(
+    current: number,
+    total: number,
+    message: string,
+    actionMessage?: string,
+  ): void {
     const percentage = Math.floor((current / total) * 100);
     const progressBar = this.createProgressBar(percentage);
     const progressInfo = `${message}: ${progressBar} ${current}/${total} (${percentage}%)`;
-    
+
     if (actionMessage) {
       this.info(`${progressInfo} - ${actionMessage}`);
     } else {
