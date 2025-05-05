@@ -11,7 +11,9 @@ export async function executeInBatches<T, R>(
   const inProgress = new Set<T>();
   const results: R[] = [];
 
-  logger.debug(`Starting batch processing of ${items.length} items with concurrency ${concurrency}`);
+  logger.debug(
+    `Starting batch processing of ${items.length} items with concurrency ${concurrency}`,
+  );
 
   // Process next item in queue
   async function processNext(): Promise<void> {
@@ -24,7 +26,11 @@ export async function executeInBatches<T, R>(
       const result = await fn(item);
       results.push(result);
     } catch (error) {
-      logger.error(`Error processing batch item: ${error instanceof Error ? error.message : String(error)}`);
+      logger.error(
+        `Error processing batch item: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     } finally {
       inProgress.delete(item);
 

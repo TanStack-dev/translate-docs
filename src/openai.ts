@@ -70,30 +70,34 @@ function setValueAtPath(
   value: string,
 ): void {
   if (path.length === 0) return;
-  
+
   // Navigate through the path
   let current = obj;
-  
+
   // Process the entire path to reach the target object
   for (let i = 0; i < path.length; i++) {
     const key = path[i];
-    
+
     // For the last segment in the path
     if (i === path.length - 1) {
       // Check if the object at this position exists and has a label property
-      if (current[key] && typeof current[key] === 'object' && current[key] !== null) {
+      if (
+        current[key] &&
+        typeof current[key] === 'object' &&
+        current[key] !== null
+      ) {
         // Set the label property on this object
         (current[key] as Record<string, unknown>).label = value;
       }
       return;
     }
-    
+
     // Ensure the next level exists
     if (current[key] === undefined || current[key] === null) {
       // If the next key is numeric, create an array, otherwise create an object
       current[key] = !Number.isNaN(Number(path[i + 1])) ? [] : {};
     }
-    
+
     // Move to the next level
     current = current[key] as Record<string, unknown>;
   }
@@ -107,12 +111,12 @@ export async function $translateConfig({
 }: TranslateConfigParams): Promise<DocsConfig> {
   // Create a deep copy of the config to avoid modifying the original
   const configCopy = JSON.parse(JSON.stringify(docsConfig));
-  
+
   // Find all label fields that need translation
   const labelFields = findLabelFields(configCopy);
-  
+
   console.groupCollapsed('labelFields', labelFields);
-  
+
   // Create context by summarizing from overview files
   const translationContext = await buildTranslationContext({
     langConfig,
@@ -139,12 +143,14 @@ IMPORTANT: You must follow these rules exactly:
 ${translationContext}
 
 HERE ARE THE LABELS TO TRANSLATE (translate ONLY these):
-${labelFields.map((field) => {
-  if (field.context) {
-    return `${field.value} [context: ${field.context}]`;
-  }
-  return field.value;
-}).join('\n')}`;
+${labelFields
+  .map((field) => {
+    if (field.context) {
+      return `${field.value} [context: ${field.context}]`;
+    }
+    return field.value;
+  })
+  .join('\n')}`;
 
   const response = await openai.chat.completions.create({
     model: model,
@@ -169,47 +175,51 @@ ${labelFields.map((field) => {
     .split('\n')
     .map((t) => t.trim())
     .filter((t) => t.length > 0); // Remove empty lines
-  
+
   // Remove any explanatory text that might be at the beginning
   // Check if translations count doesn't match expected count
   if (translations.length > labelFields.length) {
     // Try to detect and remove explanatory text
     // Common patterns include introductions like "Here are the translations:"
-    const introLines = translations.findIndex(line => {
+    const introLines = translations.findIndex((line) => {
       // Check if line contains any of the source labels - that's likely the first real translation
-      return labelFields.some(field => {
+      return labelFields.some((field) => {
         const sourceLabelLower = field.value.toLowerCase();
         // If this line is very similar to one of our source labels, it's probably a translation
         // (This helps identify the first actual translation line)
-        return sourceLabelLower.length > 3 && 
-               (line.toLowerCase().includes(sourceLabelLower) || 
-                sourceLabelLower.includes(line.toLowerCase()));
+        return (
+          sourceLabelLower.length > 3 &&
+          (line.toLowerCase().includes(sourceLabelLower) ||
+            sourceLabelLower.includes(line.toLowerCase()))
+        );
       });
     });
-    
+
     if (introLines > 0) {
       // Remove intro lines
       translations = translations.slice(introLines);
     } else {
       // If we can't clearly identify intro text, just take the exact number we need from the end
-      translations = translations.slice(translations.length - labelFields.length);
+      translations = translations.slice(
+        translations.length - labelFields.length,
+      );
     }
   }
-  
+
   // Further clean translations
   translations = translations
-    .map(t => {
+    .map((t) => {
       // Remove any accidentally included context
       const contextMatch = t.match(/^(.*?)(\s*\[context:.*\])$/);
       // Remove any numbering like "1. " at the beginning of lines
       const numberingMatch = t.match(/^\d+\.\s*(.*)$/);
-      
+
       if (contextMatch) return contextMatch[1].trim();
       if (numberingMatch) return numberingMatch[1].trim();
       return t;
     })
     .slice(0, labelFields.length); // Ensure we have exactly the right number of translations
-  
+
   console.log('translations', translations);
 
   if (translations.length !== labelFields.length) {
@@ -217,7 +227,7 @@ ${labelFields.map((field) => {
       `Translation count mismatch. Expected ${labelFields.length}, got ${translations.length}. Please ensure you only translate the exact labels provided.`,
     );
   }
-  
+
   // Apply translations back to the config
   labelFields.forEach((field, index) => {
     setValueAtPath(configCopy, field.path, translations[index]);

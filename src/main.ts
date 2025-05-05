@@ -1,14 +1,11 @@
 import * as fs$ from 'node:fs/promises';
 import * as path from 'node:path';
 import micromatch from 'micromatch';
-
-
 import { executeInBatches } from './batch';
 import { logger } from './logger';
 import { $translateConfig } from './openai';
 import {
   copyDoc,
-  
   extractPathToLabelMap,
   getTranslatedConfig,
   shouldTranslateConfig,
