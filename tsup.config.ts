@@ -6,9 +6,7 @@ import { resolve } from 'path';
 const version =
   process.env.NEXT_VERSION ||
   (() => {
-    const packageJson = JSON.parse(
-      readFileSync(resolve(__dirname, './package.json'), 'utf8'),
-    );
+    const packageJson = JSON.parse(readFileSync(resolve(__dirname, './package.json'), 'utf8'));
     return packageJson.version;
   })();
 

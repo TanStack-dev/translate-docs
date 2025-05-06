@@ -94,7 +94,7 @@ describe('utils', () => {
       const [shouldTranslate, reason] = shouldTranslateDoc(doc);
 
       expect(shouldTranslate).toBe(true);
-      expect(reason).toContain('Document has content');
+      expect(reason).toContain('Source has content, needs translation');
     });
 
     it('should return false for empty document', () => {

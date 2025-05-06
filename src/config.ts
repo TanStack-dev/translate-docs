@@ -7,9 +7,7 @@ interface Options {
   targetLanguage?: string;
 }
 
-export async function getConfig(
-  options: Options,
-): Promise<MainConfig | MainConfig[]> {
+export async function getConfig(options: Options): Promise<MainConfig | MainConfig[]> {
   // Load config file if specified, otherwise search for one
   let config = {} as MainConfig;
 
@@ -42,9 +40,7 @@ export async function getConfig(
       if (result) {
         logger.debug(`Loaded configuration from ${result.filepath}`);
       } else {
-        logger.warn(
-          'No configuration file found, using command line options only',
-        );
+        logger.warn('No configuration file found, using command line options only');
       }
     }
 
@@ -54,9 +50,7 @@ export async function getConfig(
     return config;
   } catch (error) {
     logger.error(
-      `Error loading config file: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Error loading config file: ${error instanceof Error ? error.message : String(error)}`,
     );
     if (options.config) {
       // Only exit if a specific config file was requested but couldn't be loaded

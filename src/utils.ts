@@ -30,9 +30,7 @@ interface BuildTranslationContextParams {
   docsContext?: string;
 }
 
-export async function getTranslatedConfig(
-  configPath: string,
-): Promise<Record<string, unknown>> {
+export async function getTranslatedConfig(configPath: string): Promise<Record<string, unknown>> {
   let translatedConfig: Record<string, unknown>;
   try {
     translatedConfig = JSON.parse(await fs$.readFile(configPath, 'utf8'));
@@ -45,10 +43,7 @@ export async function getTranslatedConfig(
 }
 
 // check if translation is needed using MD5
-export function shouldTranslateConfig(
-  docsConfig: Config,
-  translatedConfig: Config,
-): boolean {
+export function shouldTranslateConfig(docsConfig: Config, translatedConfig: Config): boolean {
   // Create deep copies to avoid modifying the originals
   const sourceCopy = JSON.parse(JSON.stringify(docsConfig));
   const targetCopy = JSON.parse(JSON.stringify(translatedConfig));
@@ -58,15 +53,9 @@ export function shouldTranslateConfig(
   stripLabels(targetCopy);
 
   // Create MD5 hashes
-  const sourceHash = crypto
-    .createHash('md5')
-    .update(JSON.stringify(sourceCopy))
-    .digest('hex');
+  const sourceHash = crypto.createHash('md5').update(JSON.stringify(sourceCopy)).digest('hex');
 
-  const targetHash = crypto
-    .createHash('md5')
-    .update(JSON.stringify(targetCopy))
-    .digest('hex');
+  const targetHash = crypto.createHash('md5').update(JSON.stringify(targetCopy)).digest('hex');
 
   logger.debug(`Source config structure hash: ${sourceHash}`);
   logger.debug(`Target config structure hash: ${targetHash}`);
@@ -140,9 +129,7 @@ export function getLastModifiedTimeFromGit(filePath: string): Date {
 }
 
 // Extract path to label mappings from config
-export function extractPathToLabelMap(
-  translatedConfig: Config,
-): Record<string, string> {
+export function extractPathToLabelMap(translatedConfig: Config): Record<string, string> {
   const map: Record<string, string> = {};
 
   function traverse(obj: Config, parentPath = ''): void {
@@ -181,10 +168,8 @@ export async function getDocUpdateStatus({
   try {
     await fs$.access(sourcePath);
   } catch (error) {
-    logger.error(
-      `Source file not found: ${sourcePath}, don't need updating, consider removing it`,
-    );
-    return [false, false, 'Source not found, consider REMOVING it'];
+    logger.error(`Source file not found: ${sourcePath}, don't need updating, consider removing it`);
+    return [false, false, 'Source not found'];
   }
 
   const sourceContent = await fs$.readFile(sourcePath, 'utf8');
@@ -198,35 +183,22 @@ export async function getDocUpdateStatus({
       logger.error(
         `Referenced file not found: ${sourceParsed.data.ref}, don't need updating, consider REMOVING it`,
       );
-      return [
-        false,
-        false,
-        `Referenced file not found, don't need updating, consider REMOVING it`,
-      ];
+      return [false, false, 'Referenced file not found'];
     }
 
-    const refLastModifiedDate = getLastModifiedTimeFromGit(
-      sourceParsed.data.ref,
-    );
+    const refLastModifiedDate = getLastModifiedTimeFromGit(sourceParsed.data.ref);
     if (refLastModifiedDate > sourceLastModifiedDate) {
       sourceLastModifiedDate = refLastModifiedDate;
     }
   }
 
-  const [shouldTranslate, reason] = shouldTranslateDoc(
-    sourceParsed,
-    isCopyPath,
-  );
+  const [shouldTranslate, reason] = shouldTranslateDoc(sourceParsed, isCopyPath);
 
   try {
     await fs$.access(targetPath);
   } catch (error) {
     logger.debug(`Target file not found: ${targetPath}, needs updating`);
-    return [
-      true,
-      shouldTranslate,
-      `Target not found, needs updating. ${reason}`,
-    ];
+    return [true, shouldTranslate, `Target not found. ${reason}`];
   }
 
   // Read target file and parse frontmatter
@@ -235,9 +207,7 @@ export async function getDocUpdateStatus({
 
   // First, check for timestamp-based updates
   if (targetParsed.data['translation-updated-at']) {
-    const metadataTranslationUpdatedAt = new Date(
-      targetParsed.data['translation-updated-at'],
-    );
+    const metadataTranslationUpdatedAt = new Date(targetParsed.data['translation-updated-at']);
 
     // console.log('sourceLastModifiedDate', sourceLastModifiedDate, 'metadataTranslationUpdatedAt', metadataTranslationUpdatedAt);
     // If the source file has been updated since the last translation
@@ -245,28 +215,14 @@ export async function getDocUpdateStatus({
       logger.debug(
         `Source file ${sourcePath} has been updated since last translation, needs updating`,
       );
-      return [
-        true,
-        shouldTranslate,
-        `Source has been updated since last translation, needs updating. ${reason}`,
-      ];
+      return [true, shouldTranslate, `Source has been modified. ${reason}`];
     }
-    return [
-      false,
-      false,
-      `Source has not been updated since last translation. ${reason}`,
-    ];
+    return [false, shouldTranslate, `Source has not been modified. ${reason}`];
   }
 
   // If there's no source-updated-at in target, it needs to be updated
-  logger.debug(
-    `Target file ${targetPath} has no source-updated-at metadata, needs updating`,
-  );
-  return [
-    true,
-    shouldTranslate,
-    `Target file has no source-updated-at metadata, needs updating. ${reason}`,
-  ];
+  logger.debug(`Target file ${targetPath} has no source-updated-at metadata, needs updating`);
+  return [true, shouldTranslate, `Target no source-updated-at metadata, needs updating. ${reason}`];
 }
 
 /**
@@ -277,18 +233,16 @@ export function shouldTranslateDoc(
   isCopyPath?: boolean,
 ): [boolean, string] {
   if (isCopyPath) {
-    return [false, 'Copy path, no translation needed'];
+    return [false, 'Source is in copy path, no translation needed'];
   }
   if (!frontmatter.data.ref) {
     if (frontmatter.content) {
-      return [true, 'Document has content, needs translation'];
+      return [true, 'Source has content, needs translation'];
     }
-    return [false, 'Document has no content, no translation needed'];
+    return [false, 'Source has no content, no translation needed'];
   }
 
-  const replace = frontmatter.data.replace as
-    | Record<string, string>
-    | undefined;
+  const replace = frontmatter.data.replace as Record<string, string> | undefined;
 
   if (
     replace &&
@@ -297,17 +251,14 @@ export function shouldTranslateDoc(
       return key.includes(' ');
     })
   ) {
-    return [true, 'Ref-doc has replace metadata, needs translation'];
+    return [true, "Source's ref has replace metadata, needs translation"];
   }
 
   if (frontmatter.content) {
-    return [true, 'Ref-doc has content, needs translation'];
+    return [true, "Source's ref content, needs translation"];
   }
 
-  return [
-    false,
-    'Ref-doc has no replace metadata, no content, no translation needed',
-  ];
+  return [false, "Source's ref no replace metadata, no content, no translation needed"];
 }
 
 // New helper function to extract context from overview files
@@ -430,9 +381,7 @@ export async function translateDoc({
     }
   }
 
-  logger.debug(
-    `Parsing content from ${sourcePath}, ${JSON.stringify(parsed.data)}`,
-  );
+  logger.debug(`Parsing content from ${sourcePath}, ${JSON.stringify(parsed.data)}`);
 
   const translationContext = `This is a complete document, title: ${
     parsed.data.title
@@ -464,9 +413,7 @@ export async function translateDoc({
     frontmatterData.title = title;
   }
 
-  logger.debug(
-    `Writing translated content, ${JSON.stringify(frontmatterData)}`,
-  );
+  logger.debug(`Writing translated content, ${JSON.stringify(frontmatterData)}`);
   const newContent = matter.stringify(translatedContent, frontmatterData);
 
   logger.debug(`Writing translated content to ${targetPath}`);
@@ -477,18 +424,13 @@ export async function translateDoc({
 /**
  * Finds Markdown files based on glob patterns
  */
-export async function findDocFiles(
-  docsRoot: string,
-  patterns: string[],
-): Promise<string[]> {
+export async function findDocFiles(docsRoot: string, patterns: string[]): Promise<string[]> {
   const files: string[] = [];
 
   for (const pattern of patterns) {
     const fullPattern = path.join(docsRoot, pattern);
     // Ensure the pattern has the .md extension
-    const filePattern = fullPattern.endsWith('.md')
-      ? fullPattern
-      : `${fullPattern}.md`;
+    const filePattern = fullPattern.endsWith('.md') ? fullPattern : `${fullPattern}.md`;
 
     try {
       // Use the glob function with ES modules syntax
@@ -502,9 +444,7 @@ export async function findDocFiles(
   // Convert absolute paths to paths relative to docsRoot without .md extension
   return files.map((file) => {
     const relativePath = path.relative(docsRoot, file);
-    return relativePath.endsWith('.md')
-      ? relativePath.slice(0, -3)
-      : relativePath;
+    return relativePath.endsWith('.md') ? relativePath.slice(0, -3) : relativePath;
   });
 }
 

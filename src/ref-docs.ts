@@ -17,9 +17,7 @@ export type DocFrontMatter = {
  */
 function replaceContent(text: string, frontmatter: GrayMatterFile<string>) {
   let result = text;
-  const replace = frontmatter.data.replace as
-    | Record<string, string>
-    | undefined;
+  const replace = frontmatter.data.replace as Record<string, string> | undefined;
   if (replace) {
     for (const [key, value] of Object.entries(replace)) {
       result = result.replace(new RegExp(key, 'g'), value);
@@ -43,8 +41,7 @@ function replaceSections(text: string, frontmatter: GrayMatterFile<string>) {
   // RegExp defining token pair to dicover sections in the document
   // [//]: # (<Section Token>)
   const sectionMarkerRegex = /\[\/\/\]: # '([a-zA-Z\d]*)'/g;
-  const sectionRegex =
-    /\[\/\/\]: # '([a-zA-Z\d]*)'[\S\s]*?\[\/\/\]: # '([a-zA-Z\d]*)'/g;
+  const sectionRegex = /\[\/\/\]: # '([a-zA-Z\d]*)'[\S\s]*?\[\/\/\]: # '([a-zA-Z\d]*)'/g;
 
   // Find all sections in origin file
   const substitutes = new Map<string, RegExpMatchArray>();
@@ -78,10 +75,7 @@ function replaceSections(text: string, frontmatter: GrayMatterFile<string>) {
         result =
           result.slice(0, sectionMatch.index!) +
           value[0] +
-          result.slice(
-            sectionMatch.index! + sectionMatch[0].length,
-            result.length,
-          );
+          result.slice(sectionMatch.index! + sectionMatch[0].length, result.length);
       }
     });
 

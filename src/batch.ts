@@ -28,9 +28,7 @@ export async function executeInBatches<T, R>(
     } catch (error) {
       console.error(error);
       logger.error(
-        `Error processing batch item: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Error processing batch item: ${error instanceof Error ? error.message : String(error)}`,
       );
     } finally {
       inProgress.delete(item);

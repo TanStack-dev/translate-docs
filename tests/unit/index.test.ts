@@ -60,24 +60,13 @@ describe('index/CLI', () => {
 
     // Verify basic command configuration
     expect(mockCommand.name).toHaveBeenCalledWith('tanstack-translation');
-    expect(mockCommand.description).toHaveBeenCalledWith(
-      'Translate tanstack docs',
-    );
+    expect(mockCommand.description).toHaveBeenCalledWith('Translate tanstack docs');
     expect(mockCommand.version).toHaveBeenCalled();
 
     // Verify all options are registered
-    expect(mockCommand.option).toHaveBeenCalledWith(
-      '-c, --config <path>',
-      expect.any(String),
-    );
-    expect(mockCommand.option).toHaveBeenCalledWith(
-      '--verbose',
-      expect.any(String),
-    );
-    expect(mockCommand.option).toHaveBeenCalledWith(
-      '-p, --pattern <pattern>',
-      expect.any(String),
-    );
+    expect(mockCommand.option).toHaveBeenCalledWith('-c, --config <path>', expect.any(String));
+    expect(mockCommand.option).toHaveBeenCalledWith('--verbose', expect.any(String));
+    expect(mockCommand.option).toHaveBeenCalledWith('-p, --pattern <pattern>', expect.any(String));
     expect(mockCommand.option).toHaveBeenCalledWith(
       '-y, --copy-path <pattern>',
       expect.any(String),
@@ -86,10 +75,7 @@ describe('index/CLI', () => {
       '-d, --docs-path <pattern>',
       expect.any(String),
     );
-    expect(mockCommand.option).toHaveBeenCalledWith(
-      '-l, --list-only',
-      expect.any(String),
-    );
+    expect(mockCommand.option).toHaveBeenCalledWith('-l, --list-only', expect.any(String));
     expect(mockCommand.option).toHaveBeenCalledWith(
       '-t, --target-language <language>',
       expect.any(String),
@@ -146,9 +132,7 @@ describe('index/CLI', () => {
     });
 
     // Verify success message
-    expect(logger.success).toHaveBeenCalledWith(
-      'Process completed successfully',
-    );
+    expect(logger.success).toHaveBeenCalledWith('Process completed successfully');
   });
 
   it('should handle array of configs', async () => {

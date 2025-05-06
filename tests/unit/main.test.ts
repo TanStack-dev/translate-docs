@@ -75,9 +75,7 @@ describe('main', () => {
 
       // Verify warning was logged and no further processing happened
       expect(vi.mocked(logger.warn)).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Target language "${nonExistentLang}" not found`,
-        ),
+        expect.stringContaining(`Target language "${nonExistentLang}" not found`),
       );
       expect(vi.mocked(fs.readFile)).not.toHaveBeenCalled();
     });
@@ -106,8 +104,7 @@ describe('main', () => {
       // Verify only one language was processed (French)
       const logCalls = vi.mocked(logger.info).mock.calls;
       const languageLogCall = logCalls.find(
-        (call) =>
-          typeof call[0] === 'string' && call[0].startsWith('language:'),
+        (call) => typeof call[0] === 'string' && call[0].startsWith('language:'),
       );
 
       expect(languageLogCall).toBeDefined();
@@ -116,16 +113,10 @@ describe('main', () => {
 
       // Verify no other languages were processed
       expect(
-        logCalls.every(
-          (call) =>
-            typeof call[0] !== 'string' || !call[0].includes('language: en'),
-        ),
+        logCalls.every((call) => typeof call[0] !== 'string' || !call[0].includes('language: en')),
       ).toBe(true);
       expect(
-        logCalls.every(
-          (call) =>
-            typeof call[0] !== 'string' || !call[0].includes('language: es'),
-        ),
+        logCalls.every((call) => typeof call[0] !== 'string' || !call[0].includes('language: es')),
       ).toBe(true);
     });
 
@@ -151,11 +142,7 @@ describe('main', () => {
       vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify({ items: [] }));
       vi.mocked(utils.getTranslatedConfig).mockResolvedValue({});
       vi.mocked(utils.shouldTranslateConfig).mockReturnValue(false);
-      vi.mocked(utils.getDocUpdateStatus).mockResolvedValue([
-        false,
-        false,
-        'No updates needed',
-      ]);
+      vi.mocked(utils.getDocUpdateStatus).mockResolvedValue([false, false, 'No updates needed']);
       vi.mocked(utils.extractPathToLabelMap).mockReturnValue({});
 
       // Execute main
@@ -165,9 +152,7 @@ describe('main', () => {
       expect(utils.findDocFiles).toHaveBeenCalledWith('/docs', ['**/*.md']);
 
       // Verify getDocUpdateStatus was called for each doc path
-      expect(utils.getDocUpdateStatus).toHaveBeenCalledTimes(
-        mockDocPaths.length,
-      );
+      expect(utils.getDocUpdateStatus).toHaveBeenCalledTimes(mockDocPaths.length);
     });
 
     it('should translate config when it needs updating', async () => {
@@ -303,10 +288,11 @@ describe('main', () => {
       vi.mocked(utils.getTranslatedConfig).mockResolvedValue({});
       vi.mocked(utils.shouldTranslateConfig).mockReturnValue(false);
 
-      // Both documents need translation, but reference/api should be forced to copy
+      // Both documents need updates, but reference/api matches copyPath pattern
+      // so it should be forced to copy only, not translate
       vi.mocked(utils.getDocUpdateStatus)
         .mockResolvedValueOnce([true, true, 'Source updated']) // guide/intro
-        .mockResolvedValueOnce([true, true, 'Source updated']); // reference/api
+        .mockResolvedValueOnce([true, false, 'Source updated but copy only']); // reference/api should report as copy only
 
       vi.mocked(utils.extractPathToLabelMap).mockReturnValue({});
 
@@ -329,10 +315,27 @@ describe('main', () => {
         }),
       );
 
-      // Verify copyDoc was called for reference/api despite it needing translation
+      // Verify copyDoc was called for reference/api despite it potentially needing translation
+      expect(utils.copyDoc).toHaveBeenCalledTimes(1);
       expect(utils.copyDoc).toHaveBeenCalledWith(
         expect.objectContaining({
           sourcePath: '/docs/reference/api.md',
+        }),
+      );
+
+      // Verify that getDocUpdateStatus was called with isCopyPath=true for reference/api
+      expect(utils.getDocUpdateStatus).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          sourcePath: '/docs/guide/intro.md',
+          isCopyPath: false,
+        }),
+      );
+      expect(utils.getDocUpdateStatus).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          sourcePath: '/docs/reference/api.md',
+          isCopyPath: true, // This should be true because it matches copyPath
         }),
       );
     });

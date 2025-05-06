@@ -53,9 +53,7 @@ describe('batch', () => {
       });
 
       // Mock console.error to prevent it from printing to the console during tests
-      const consoleErrorSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const results = await executeInBatches(items, processor, 2);
 
@@ -80,10 +78,7 @@ describe('batch', () => {
         inProgress.add(item);
 
         // Track maximum observed concurrency
-        maxObservedConcurrent = Math.max(
-          maxObservedConcurrent,
-          inProgress.size,
-        );
+        maxObservedConcurrent = Math.max(maxObservedConcurrent, inProgress.size);
 
         // Simulate some async work
         await new Promise((resolve) => setTimeout(resolve, 10));

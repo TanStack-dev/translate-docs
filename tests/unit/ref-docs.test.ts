@@ -43,9 +43,7 @@ This is some test content.`;
         title: 'Test Document',
         description: 'This is a test document',
       });
-      expect(result.content).toBe(
-        '\n# Test Content\n\nThis is some test content.',
-      );
+      expect(result.content).toBe('\n# Test Content\n\nThis is some test content.');
     });
 
     it('should handle content without front matter', () => {
@@ -54,9 +52,7 @@ This is some test content.`;
       const result = extractFrontMatter(content);
 
       expect(result.data).toEqual({});
-      expect(result.content).toBe(
-        '# Test Content\n\nThis is some test content.',
-      );
+      expect(result.content).toBe('# Test Content\n\nThis is some test content.');
     });
   });
 

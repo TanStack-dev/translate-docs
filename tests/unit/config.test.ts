@@ -41,10 +41,7 @@ describe('config', () => {
       const result = await getConfig({ config: configFile });
 
       // Assertions
-      expect(cosmiconfig).toHaveBeenCalledWith(
-        'translation',
-        expect.any(Object),
-      );
+      expect(cosmiconfig).toHaveBeenCalledWith('translation', expect.any(Object));
       expect(mockLoad).toHaveBeenCalledWith(configFile);
       expect(result).toEqual(mockConfig);
     });
@@ -61,10 +58,7 @@ describe('config', () => {
       const result = await getConfig({});
 
       // Assertions
-      expect(cosmiconfig).toHaveBeenCalledWith(
-        'translation',
-        expect.any(Object),
-      );
+      expect(cosmiconfig).toHaveBeenCalledWith('translation', expect.any(Object));
       expect(mockSearch).toHaveBeenCalled();
       expect(result).toEqual(mockConfig);
     });
@@ -87,9 +81,7 @@ describe('config', () => {
       mockLoad.mockRejectedValue(error);
 
       // Mock process.exit to prevent the test from actually exiting
-      const mockExit = vi
-        .spyOn(process, 'exit')
-        .mockImplementation(vi.fn() as any);
+      const mockExit = vi.spyOn(process, 'exit').mockImplementation(vi.fn() as any);
 
       // Call the function with a specific config file that will error
       await getConfig({ config: configFile });

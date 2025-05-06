@@ -38,16 +38,14 @@ vi.mock('../../src/openai', () => ({
 }));
 
 // Mock utils functions that need special handling
-vi.spyOn(utils, 'copyDoc').mockImplementation(
-  async ({ sourcePath, targetPath }) => {
-    // Create target directory
-    await fs.mkdir(path.dirname(targetPath), { recursive: true });
-    // Copy file content
-    const content = await fs.readFile(sourcePath, 'utf8');
-    await fs.writeFile(targetPath, content, 'utf8');
-    return true;
-  },
-);
+vi.spyOn(utils, 'copyDoc').mockImplementation(async ({ sourcePath, targetPath }) => {
+  // Create target directory
+  await fs.mkdir(path.dirname(targetPath), { recursive: true });
+  // Copy file content
+  const content = await fs.readFile(sourcePath, 'utf8');
+  await fs.writeFile(targetPath, content, 'utf8');
+  return true;
+});
 
 vi.spyOn(utils, 'translateDoc').mockImplementation(
   async ({ sourcePath, targetPath, langConfig }) => {
@@ -58,11 +56,7 @@ vi.spyOn(utils, 'translateDoc').mockImplementation(
     const content = await fs.readFile(sourcePath, 'utf8');
 
     // Add translation prefix and write to target
-    await fs.writeFile(
-      targetPath,
-      `[Translated to ${langConfig.name}]\n${content}`,
-      'utf8',
-    );
+    await fs.writeFile(targetPath, `[Translated to ${langConfig.name}]\n${content}`, 'utf8');
   },
 );
 
@@ -340,12 +334,10 @@ replace:
     ); // Note: No content, just frontmatter with ref
 
     // Mock getSourceRefContent to handle ref documents
-    vi.spyOn(utils, 'getDocUpdateStatus').mockImplementation(
-      async ({ sourcePath }) => {
-        // Always indicate docs need updating for test purposes
-        return [true, true, 'Mocked: file needs updating'];
-      },
-    );
+    vi.spyOn(utils, 'getDocUpdateStatus').mockImplementation(async ({ sourcePath }) => {
+      // Always indicate docs need updating for test purposes
+      return [true, true, 'Mocked: file needs updating'];
+    });
 
     // Setup test configuration
     const config = {
@@ -371,23 +363,21 @@ replace:
     // Replace our spy on translateDoc with a new implementation for this test
     const translateDocSpy = vi
       .spyOn(utils, 'translateDoc')
-      .mockImplementation(
-        async ({ sourcePath, targetPath, langConfig, docsContext, title }) => {
-          // Create necessary directories
-          await fs.mkdir(path.dirname(targetPath), { recursive: true });
+      .mockImplementation(async ({ sourcePath, targetPath, langConfig, docsContext, title }) => {
+        // Create necessary directories
+        await fs.mkdir(path.dirname(targetPath), { recursive: true });
 
-          // Read the source content
-          const content = await fs.readFile(sourcePath, 'utf8');
+        // Read the source content
+        const content = await fs.readFile(sourcePath, 'utf8');
 
-          // Add guide and terms info to the translated content
-          const translatedContent = `[Translated with guide: ${
-            langConfig.guide
-          }]\n[Terms used: ${JSON.stringify(langConfig.terms)}]\n${content}`;
+        // Add guide and terms info to the translated content
+        const translatedContent = `[Translated with guide: ${
+          langConfig.guide
+        }]\n[Terms used: ${JSON.stringify(langConfig.terms)}]\n${content}`;
 
-          // Write the result
-          await fs.writeFile(targetPath, translatedContent, 'utf8');
-        },
-      );
+        // Write the result
+        await fs.writeFile(targetPath, translatedContent, 'utf8');
+      });
 
     // Setup test configuration with language-specific guides and terms
     const config = {

@@ -28,13 +28,10 @@ class Logger {
   }
 
   private formatMessage(level: LogLevel, message: string): string {
-    const timestamp = new Date()
-      .toISOString()
-      .replace('T', ' ')
-      .substring(0, 19);
-    return `${this.colors[level]}${
-      this.icons[level]
-    } ${timestamp} [${level.toUpperCase()}]${this.colors.reset} ${message}`;
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    return `${this.colors[level]}${this.icons[level]} ${timestamp} [${level.toUpperCase()}]${
+      this.colors.reset
+    } ${message}`;
   }
 
   info(message: string): void {
@@ -66,12 +63,7 @@ class Logger {
   /**
    * Log progress of a batch operation
    */
-  progress(
-    current: number,
-    total: number,
-    message: string,
-    actionMessage?: string,
-  ): void {
+  progress(current: number, total: number, message: string, actionMessage?: string): void {
     const percentage = Math.floor((current / total) * 100);
     const progressBar = this.createProgressBar(percentage);
     const progressInfo = `${message}: ${progressBar} ${current}/${total} (${percentage}%)`;

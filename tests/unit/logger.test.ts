@@ -4,9 +4,7 @@ import { logger } from '../../src/logger';
 describe('logger', () => {
   // Spy on console methods
   const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-  const consoleErrorSpy = vi
-    .spyOn(console, 'error')
-    .mockImplementation(() => {});
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
   beforeEach(() => {
     // Clear all mocks before each test

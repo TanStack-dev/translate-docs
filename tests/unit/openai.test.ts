@@ -21,9 +21,7 @@ vi.mock('../../src/openai', async () => {
 
 // Mock the utils functions
 vi.mock('../../src/utils', () => ({
-  buildTranslationContext: vi
-    .fn()
-    .mockResolvedValue('Mocked translation context'),
+  buildTranslationContext: vi.fn().mockResolvedValue('Mocked translation context'),
 }));
 
 // Mock logger

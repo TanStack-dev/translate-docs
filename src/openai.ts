@@ -59,9 +59,7 @@ function findLabelFields(
         const context = typeof to === 'string' ? to : undefined;
         results.push({ path: [...path], value, context });
       } else if (typeof value === 'object' && value !== null) {
-        results.push(
-          ...findLabelFields(value as Record<string, unknown>, [...path, key]),
-        );
+        results.push(...findLabelFields(value as Record<string, unknown>, [...path, key]));
       }
     }
   }
@@ -70,11 +68,7 @@ function findLabelFields(
 }
 
 // Helper function to set a value at a nested path
-function setValueAtPath(
-  obj: Record<string, unknown>,
-  path: string[],
-  value: string,
-): void {
+function setValueAtPath(obj: Record<string, unknown>, path: string[], value: string): void {
   if (path.length === 0) return;
 
   // Navigate through the path
@@ -87,11 +81,7 @@ function setValueAtPath(
     // For the last segment in the path
     if (i === path.length - 1) {
       // Check if the object at this position exists and has a label property
-      if (
-        current[key] &&
-        typeof current[key] === 'object' &&
-        current[key] !== null
-      ) {
+      if (current[key] && typeof current[key] === 'object' && current[key] !== null) {
         // Set the label property on this object
         (current[key] as Record<string, unknown>).label = value;
       }
@@ -125,12 +115,8 @@ export async function $translateConfig({
   // Find all label fields that need translation
   const labelFields = findLabelFields(configCopy);
 
-  logger.info(
-    `Found ${labelFields.length} label fields to translate in the config`,
-  );
-  console.table(
-    labelFields.map((field) => ({ ...field, path: field.path.join('.') })),
-  );
+  logger.info(`Found ${labelFields.length} label fields to translate in the config`);
+  console.table(labelFields.map((field) => ({ ...field, path: field.path.join('.') })));
 
   // Create context by summarizing from overview files
   const translationContext = await buildTranslationContext({
@@ -215,9 +201,7 @@ ${labelFields
       translations = translations.slice(introLines);
     } else {
       // If we can't clearly identify intro text, just take the exact number we need from the end
-      translations = translations.slice(
-        translations.length - labelFields.length,
-      );
+      translations = translations.slice(translations.length - labelFields.length);
     }
   }
 
