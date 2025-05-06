@@ -13,7 +13,7 @@ interface DocsConfig {
 interface TranslateConfigParams {
   docsConfig: DocsConfig;
   langConfig: LangConfig;
-  docsContext: string;
+  docsContext?: string;
 }
 
 interface TranslateDocumentParams {

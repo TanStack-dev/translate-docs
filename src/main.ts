@@ -18,11 +18,11 @@ import { MainConfig } from './types';
 
 export async function main({
   langs,
-  docsRoot,
+  docsRoot = 'docs',
   docsContext,
   pattern,
   copyPath,
-  docsPath,
+  docsPath = ['**/*.md'],
   listOnly,
   targetLanguage,
 }: MainConfig): Promise<void> {

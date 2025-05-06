@@ -19,8 +19,8 @@ export interface Config {
 
 export interface MainConfig {
   langs: Record<string, LangConfig>;
-  docsRoot: string;
-  docsContext: string;
+  docsRoot?: string;
+  docsContext?: string;
   pattern?: string | string[];
   copyPath?: string | string[];
   docsPath?: string | string[];
