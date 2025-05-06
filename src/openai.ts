@@ -181,7 +181,7 @@ ${labelFields
     ],
   });
 
-  if (!response.choices[0]?.message?.content) {
+  if (!response.choices?.[0]?.message?.content) {
     throw new Error('Failed to get translation response');
   }
 
@@ -297,7 +297,7 @@ HERE IS THE TEXT TO TRANSLATE:
     ],
   });
 
-  const translatedContent = response.choices[0]?.message?.content;
+  const translatedContent = response.choices?.[0]?.message?.content;
   if (!translatedContent) {
     throw new Error('Failed to get translation response');
   }
