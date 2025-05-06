@@ -24,7 +24,7 @@ describe('batch', () => {
       });
 
       const results = await executeInBatches(items, processor, 2);
-      
+
       // Check that all items were processed
       expect(processor).toHaveBeenCalledTimes(items.length);
       expect(results).toEqual([2, 4, 6, 8, 10]);
@@ -37,7 +37,7 @@ describe('batch', () => {
       });
 
       const results = await executeInBatches(items, processor, 2);
-      
+
       // Verify processor was never called and results is empty
       expect(processor).not.toHaveBeenCalled();
       expect(results).toEqual([]);
@@ -51,18 +51,20 @@ describe('batch', () => {
         }
         return item * 2;
       });
-      
+
       // Mock console.error to prevent it from printing to the console during tests
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
 
       const results = await executeInBatches(items, processor, 2);
-      
+
       // Verify all items were processed (or attempted)
       expect(processor).toHaveBeenCalledTimes(items.length);
       // Items 1, 2, 4, 5 succeeded (item 3 failed)
       expect(results).toEqual([2, 4, 8, 10]);
       expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
-      
+
       // Restore the original console.error
       consoleErrorSpy.mockRestore();
     });
@@ -76,21 +78,24 @@ describe('batch', () => {
       const processor = vi.fn().mockImplementation(async (item: number) => {
         // Record this item as in progress
         inProgress.add(item);
-        
+
         // Track maximum observed concurrency
-        maxObservedConcurrent = Math.max(maxObservedConcurrent, inProgress.size);
-        
+        maxObservedConcurrent = Math.max(
+          maxObservedConcurrent,
+          inProgress.size,
+        );
+
         // Simulate some async work
-        await new Promise(resolve => setTimeout(resolve, 10));
-        
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
         // Mark item as complete
         inProgress.delete(item);
-        
+
         return item * 2;
       });
 
       const results = await executeInBatches(items, processor, maxConcurrent);
-      
+
       // Verify concurrency limit was respected
       expect(maxObservedConcurrent).toBeLessThanOrEqual(maxConcurrent);
       // Verify all items were processed

@@ -22,6 +22,7 @@ interface LangConfig {
 interface CheckFileUpdateParams {
   sourcePath: string;
   targetPath: string;
+  isCopyPath: boolean;
 }
 
 interface BuildTranslationContextParams {
@@ -175,6 +176,7 @@ export function extractPathToLabelMap(
 export async function getDocUpdateStatus({
   sourcePath,
   targetPath,
+  isCopyPath,
 }: CheckFileUpdateParams): Promise<[boolean, boolean, string]> {
   try {
     await fs$.access(sourcePath);
@@ -182,11 +184,7 @@ export async function getDocUpdateStatus({
     logger.error(
       `Source file not found: ${sourcePath}, don't need updating, consider removing it`,
     );
-    return [
-      false,
-      false,
-      `Source file not found, don't need updating, consider REMOVING it`,
-    ];
+    return [false, false, 'Source not found, consider REMOVING it'];
   }
 
   const sourceContent = await fs$.readFile(sourcePath, 'utf8');
@@ -215,7 +213,10 @@ export async function getDocUpdateStatus({
     }
   }
 
-  const [shouldTranslate, reason] = shouldTranslateDoc(sourceParsed);
+  const [shouldTranslate, reason] = shouldTranslateDoc(
+    sourceParsed,
+    isCopyPath,
+  );
 
   try {
     await fs$.access(targetPath);
@@ -224,7 +225,7 @@ export async function getDocUpdateStatus({
     return [
       true,
       shouldTranslate,
-      `Target file not found, needs updating. ${reason}`,
+      `Target not found, needs updating. ${reason}`,
     ];
   }
 
@@ -247,13 +248,13 @@ export async function getDocUpdateStatus({
       return [
         true,
         shouldTranslate,
-        `Source file has been updated since last translation, needs updating. ${reason}`,
+        `Source has been updated since last translation, needs updating. ${reason}`,
       ];
     }
     return [
       false,
       false,
-      `Source file has not been updated since last translation. ${reason}`,
+      `Source has not been updated since last translation. ${reason}`,
     ];
   }
 
@@ -273,7 +274,11 @@ export async function getDocUpdateStatus({
  */
 export function shouldTranslateDoc(
   frontmatter: GrayMatterFile<string>,
+  isCopyPath?: boolean,
 ): [boolean, string] {
+  if (isCopyPath) {
+    return [false, 'Copy path, no translation needed'];
+  }
   if (!frontmatter.data.ref) {
     if (frontmatter.content) {
       return [true, 'Document has content, needs translation'];
@@ -292,16 +297,16 @@ export function shouldTranslateDoc(
       return key.includes(' ');
     })
   ) {
-    return [true, 'Ref-document has replace metadata, needs translation'];
+    return [true, 'Ref-doc has replace metadata, needs translation'];
   }
 
   if (frontmatter.content) {
-    return [true, 'Ref-document has content, needs translation'];
+    return [true, 'Ref-doc has content, needs translation'];
   }
 
   return [
     false,
-    'Ref-document has no replace metadata, no content, no translation needed',
+    'Ref-doc has no replace metadata, no content, no translation needed',
   ];
 }
 

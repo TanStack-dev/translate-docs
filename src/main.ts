@@ -205,9 +205,8 @@ export async function main({
         tableData.push({
           Source: docsConfigPath,
           Target: translatedConfigPath,
-          'Needs Update': configNeedsTranslation ? '✅ Yes' : '❌ No',
-          'Needs Translation': configNeedsTranslation ? '✅ Yes' : '❌ No',
-          'Copy Only': '❌ No',
+          'Update?': configNeedsTranslation ? '✅ Yes' : '❌ No',
+          'Translate?': configNeedsTranslation ? '✅ Yes' : '❌ No',
           Reason: configNeedsTranslation
             ? 'Config structure changed'
             : 'No changes needed',
@@ -227,13 +226,13 @@ export async function main({
 
       const sourcePath = path.join(docsRoot, `${docPath}.md`);
       const targetPath = path.join(translatedRoot, `${docPath}.md`);
+      // Check if this path should be copied without translation
+      const isCopyPath = copyWithoutTranslationSet.has(docPath);
       const [shouldUpdate, shouldTranslate, reason] = await getDocUpdateStatus({
         sourcePath,
         targetPath,
+        isCopyPath,
       });
-
-      // Check if this path should be copied without translation
-      const isCopyPath = copyWithoutTranslationSet.has(docPath);
 
       // If it's in copyPath list, we should force copy without translation
       const finalShouldTranslate = isCopyPath ? false : shouldTranslate;
@@ -241,12 +240,9 @@ export async function main({
       tableData.push({
         Source: sourcePath,
         Target: targetPath,
-        'Needs Update': shouldUpdate ? '✅ Yes' : '❌ No',
-        'Needs Translation': finalShouldTranslate ? '✅ Yes' : '❌ No',
-        'Copy Only': isCopyPath ? '✅ Yes' : '❌ No',
-        Reason: isCopyPath
-          ? 'Marked for copy only'
-          : reason || 'No changes needed',
+        'Update?': shouldUpdate ? '✅ Yes' : '❌ No',
+        'Translate?': shouldTranslate ? '✅ Yes' : '❌ No',
+        Reason: reason,
       });
 
       if (shouldUpdate) {
@@ -291,7 +287,7 @@ export async function main({
               completedRefDocs,
               tasks.length,
               'Updating documents',
-              'Translated config.json',
+              `${task.targetPath} translated`,
             );
           } else if (task.shouldTranslate) {
             const title = pathToLabelMap[task.docPath];
@@ -308,7 +304,7 @@ export async function main({
               completedRefDocs,
               tasks.length,
               'Updating documents',
-              `Translated ${path.basename(task.sourcePath)}`,
+              `${task.targetPath} translated`,
             );
           } else {
             await copyDoc({
@@ -323,7 +319,7 @@ export async function main({
               completedRefDocs,
               tasks.length,
               'Updating documents',
-              `Copied ${path.basename(task.sourcePath)}`,
+              `${task.targetPath} copied`,
             );
           }
         },

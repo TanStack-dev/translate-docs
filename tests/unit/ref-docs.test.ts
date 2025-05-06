@@ -38,21 +38,25 @@ description: This is a test document
 This is some test content.`;
 
       const result = extractFrontMatter(content);
-      
+
       expect(result.data).toEqual({
         title: 'Test Document',
         description: 'This is a test document',
       });
-      expect(result.content).toBe('\n# Test Content\n\nThis is some test content.');
+      expect(result.content).toBe(
+        '\n# Test Content\n\nThis is some test content.',
+      );
     });
 
     it('should handle content without front matter', () => {
       const content = '# Test Content\n\nThis is some test content.';
-      
+
       const result = extractFrontMatter(content);
-      
+
       expect(result.data).toEqual({});
-      expect(result.content).toBe('# Test Content\n\nThis is some test content.');
+      expect(result.content).toBe(
+        '# Test Content\n\nThis is some test content.',
+      );
     });
   });
 
@@ -64,15 +68,15 @@ title: Test Document
 ---
 
 # Test Content`;
-      
+
       vi.mocked(fs.readFile).mockResolvedValue(mockContent);
-      
+
       const result = await getSourceRefContent('test.md');
-      
+
       expect(result).toBe(mockContent);
       expect(fs.readFile).toHaveBeenCalledWith('test.md', 'utf8');
     });
-    
+
     it('should follow a ref to another file when present', async () => {
       // Mock two files - one with a ref, one without
       const fileWithRef = `---
@@ -87,13 +91,14 @@ title: Referenced Document
 ---
 
 # Referenced Content`;
-      
+
       // First call returns fileWithRef, second call returns referencedFile
-      vi.mocked(fs.readFile).mockResolvedValueOnce(fileWithRef)
+      vi.mocked(fs.readFile)
+        .mockResolvedValueOnce(fileWithRef)
         .mockResolvedValueOnce(referencedFile);
-      
+
       const result = await getSourceRefContent('test.md');
-      
+
       // Should return the referenced file content
       expect(result).toBe(referencedFile);
       // Should have made 2 fs calls
@@ -103,7 +108,7 @@ title: Referenced Document
       // Second call should be for the referenced file
       expect(fs.readFile).toHaveBeenNthCalledWith(2, 'referenced.md', 'utf8');
     });
-    
+
     it('should handle content replacement in referenced files', async () => {
       // File with ref and replacements
       const fileWithRef = `---
@@ -120,21 +125,22 @@ title: Referenced Document
 ---
 
 # Referenced Content with old-term`;
-      
+
       // First call returns fileWithRef, second call returns referencedFile
-      vi.mocked(fs.readFile).mockResolvedValueOnce(fileWithRef)
+      vi.mocked(fs.readFile)
+        .mockResolvedValueOnce(fileWithRef)
         .mockResolvedValueOnce(referencedFile);
-      
+
       const result = await getSourceRefContent('test.md');
-      
+
       // Should have the replaced content
       expect(result).toContain('# Referenced Content with new-term');
     });
-    
+
     it('should handle section replacements in referenced files', async () => {
       // Mock console methods to capture outputs
       const consoleErrorSpy = vi.spyOn(console, 'error');
-      
+
       // The test needs to ensure sections are properly formatted
       // The markers must be identical and not nested
       const fileWithRef = `---
@@ -163,35 +169,36 @@ This will be replaced
 [//]: # 'custom-section'
 
 Final content`;
-      
+
       // First call returns fileWithRef, second call returns referencedFile
-      vi.mocked(fs.readFile).mockResolvedValueOnce(fileWithRef)
+      vi.mocked(fs.readFile)
+        .mockResolvedValueOnce(fileWithRef)
         .mockResolvedValueOnce(referencedFile);
-      
+
       const result = await getSourceRefContent('test.md');
-      
+
       // Given how the replacement works, let's just check for key markers
       // The result should contain the frontmatter from the referenced file
       expect(result).toContain('title: Referenced Document');
-      
+
       // Check key parts are present/absent
       expect(result).toContain('# Referenced Content'); // From referenced file
       expect(result).toContain('Final content'); // From referenced file
-      
+
       // Note: In our mocked test environment, we can't fully test the section replacement functionality
       // as it would require more complex setup to mock internal details.
       // A full integration test would be more appropriate to test this functionality.
     });
-    
+
     it('should handle file read errors', async () => {
       // Mock fs.readFile to throw an error
       vi.mocked(fs.readFile).mockRejectedValue(new Error('File not found'));
-      
+
       const result = await getSourceRefContent('nonexistent.md');
-      
+
       expect(result).toBeNull();
     });
-    
+
     it('should prevent circular references by limiting depth', async () => {
       // Setup a circular reference scenario
       const file1 = `---
@@ -223,7 +230,7 @@ title: File 5
 ref: file1.md
 ---
 # File 5 Content`;
-      
+
       // Mock multiple chained file reads
       vi.mocked(fs.readFile)
         .mockResolvedValueOnce(file1)
@@ -231,10 +238,10 @@ ref: file1.md
         .mockResolvedValueOnce(file3)
         .mockResolvedValueOnce(file4)
         .mockResolvedValueOnce(file5);
-      
+
       // Should prevent infinite recursion
       const result = await getSourceRefContent('file1.md');
-      
+
       // Should hit the max depth limit and return null
       expect(result).toBeNull();
     });
