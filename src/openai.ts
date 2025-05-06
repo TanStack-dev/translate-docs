@@ -125,7 +125,12 @@ export async function $translateConfig({
   // Find all label fields that need translation
   const labelFields = findLabelFields(configCopy);
 
-  console.groupCollapsed('labelFields', labelFields);
+  logger.info(
+    `Found ${labelFields.length} label fields to translate in the config`,
+  );
+  console.table(
+    labelFields.map((field) => ({ ...field, path: field.path.join('.') })),
+  );
 
   // Create context by summarizing from overview files
   const translationContext = await buildTranslationContext({
